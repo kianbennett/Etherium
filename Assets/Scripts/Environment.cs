@@ -138,6 +138,20 @@ public class Environment : MonoBehaviour
                 {
                     tile.Connections.Add(mMap[x][y + 1]);
                 }
+
+                // Diagonal
+                if(x > 0 && y > 0) {
+                    tile.Connections.Add(mMap[x - 1][y - 1]);
+                }
+                if(x < Size.x - 1 && y > 0) {
+                    tile.Connections.Add(mMap[x + 1][y - 1]);
+                }
+                if(x > 0 && y < Size.y - 1) {
+                    tile.Connections.Add(mMap[x - 1][y + 1]);
+                }
+                if(x < Size.x - 1 && y < Size.y - 1) {
+                    tile.Connections.Add(mMap[x + 1][y + 1]);
+                }
             }
         }
     }
