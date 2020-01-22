@@ -26,6 +26,8 @@ public class UnitHarvester : Unit {
                 if(harvestAmount >= harvestAmountPerResource) {
                     harvestAmount = 0;
                     resourceToHarvest.Harvest(harvestAmountPerResource);
+                    if(resourceToHarvest.type == ResourceType.Gem) GameManager.instance.gems += 5;
+                    if(resourceToHarvest.type == ResourceType.Mineral) GameManager.instance.minerals += 20;
                 }
                 isHarvesting = true;
                 if(!resourceToHarvest.unitsHarvesting.Contains(this)) resourceToHarvest.unitsHarvesting.Add(this);

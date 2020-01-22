@@ -10,6 +10,7 @@ public class Unit : WorldObject {
     public UnitActionHandler actionHandler;
     public UnitMovement movement;
     public Transform model;
+    public ParticleSystem dustParticles;
 
     public float healthMax;
     [ReadOnly] public float healthCurrent;
@@ -20,6 +21,7 @@ public class Unit : WorldObject {
         healthCurrent = healthMax;
 
         HUD.instance.CreateHealthbar(this);
+        HUD.instance.CreateUnitIcon(this);
     }
 
     protected override void Update () {
@@ -30,6 +32,14 @@ public class Unit : WorldObject {
                 PlayerController.instance.SelectObject(this);
             } else if(isSelected && !isInSelectionBox()) {
                 PlayerController.instance.DeselectObject(this);
+            }
+        }
+
+        if(dustParticles != null) {
+            bool isMoving = movement.pathNodes != null;
+            if(isMoving != dustParticles.isPlaying) {
+                if(isMoving) dustParticles.Play();
+                    else dustParticles.Stop();
             }
         }
         
@@ -58,7 +68,13 @@ public class Unit : WorldObject {
         PlayerController.instance.SelectObject(this);
     }
 
-    public void MoveToPoint(TileData tile) {
+    public override void OnRightClick() {
+        base.OnLeftClick();
+
+        PlayerController.instance.AttackUnit(this);
+    }
+
+    public virtual void MoveToPoint(TileData tile) {
         movement.CalculatePath(tile);
     }
 
@@ -75,6 +91,16 @@ public class Unit : WorldObject {
             if (PlayerController.instance.objectHovered == this) {
                 PlayerController.instance.objectHovered = null;
             }
+        }
+        if(World.instance) {
+            World.instance.units.Remove(this);
+        }
+    }
+
+    public void Damage(int damage) {
+        healthCurrent -= damage;
+        if(healthCurrent <= 0) {
+            Destroy(gameObject);
         }
     }
 }

@@ -11,7 +11,7 @@ public class UnitMovement : MonoBehaviour {
     public AnimationCurve accCurve, decCurve;
     public bool isFlying;
 
-    [ReadOnly] public Vector3 lookDir;
+    [ReadOnly] public Vector3 moveDir, lookDir;
     [ReadOnly] public bool canMove = true;
     [ReadOnly] public bool hasReachedDestination;
     
@@ -32,10 +32,10 @@ public class UnitMovement : MonoBehaviour {
 
     void Update() {
         if (pathNodes != null && !hasReachedDestination) {
-            currentSpeed = getCurrentSpeed(moveSpeed);
+            currentSpeed = calculateCurrentSpeed(moveSpeed);
 
             distTravelled += currentSpeed * Time.deltaTime;
-            transform.position += lookDir * currentSpeed * Time.deltaTime;
+            transform.position += moveDir * currentSpeed * Time.deltaTime;
 
             if(DistFromLastWaypoint(transform.position) > DistToNextWaypoint()) {
                 NextTargetNode();
@@ -67,22 +67,26 @@ public class UnitMovement : MonoBehaviour {
             }
         } while(path.Count > 0 && path.Last().occupiedUnit != null && path.Last().occupiedUnit != unit);
         
+        target.occupiedUnit = unit;
+        if(tileDestination != null) tileDestination.occupiedUnit = null;
+        tileDestination = target;
+
+        SetPath(path);
+    }
+
+    public void SetPath(List<TileData> path) {
         pathNodes = path;
         hasReachedDestination = false;
         totalPathLength = (pathNodes.Count - 1) * World.tileSize;
         distTravelled = 0;
         targetNode = 0;
 
-        target.occupiedUnit = unit;
-        if(tileDestination != null) tileDestination.occupiedUnit = null;
-        tileDestination = target;
-
         SetTargetNode(1);
 
         distTravelled = DistFromLastWaypoint(transform.position);
     }
 
-    private float getCurrentSpeed(float maxSpeed) {
+    private float calculateCurrentSpeed(float maxSpeed) {
         if (distTravelled < totalPathLength - decDist) {
             return accCurve.Evaluate(distTravelled) * maxSpeed;
         } else {
@@ -101,9 +105,15 @@ public class UnitMovement : MonoBehaviour {
             return;
         }
 
-        lookDir = pathNodes[node].worldPos - pathNodes[node - 1].worldPos;
+        moveDir = pathNodes[node].worldPos - pathNodes[node - 1].worldPos;
+        lookDir = moveDir;
         targetNode = node;
         unit.tile = pathNodes[node];
+    }
+
+    public void EndPath() {
+        pathNodes = null;
+        hasReachedDestination = true;
     }
 
     public void NextTargetNode() {
@@ -138,5 +148,10 @@ public class UnitMovement : MonoBehaviour {
 
     // Stops on the next tile they would have entered
     public void StopMoving() {
+        if(pathNodes != null) {
+            // pathNodes.RemoveRange(targetNode, pathNodes.Count() - targetNode - 1);
+            pathNodes = new List<TileData>() { pathNodes[targetNode - 1], pathNodes[targetNode] };
+            SetPath(pathNodes);
+        }
     }
 }

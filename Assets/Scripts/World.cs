@@ -16,18 +16,22 @@ public class World : Singleton<World> {
     public WorldObject basePrefab;
     public WorldObject minePrefab;
     public WorldObject mineralPrefab;
-    public Unit unitarvesterPrefab, unitScoutPrefab;
+    public Unit unitarvesterPrefab, unitScoutPrefab, unitFighterPrefab, unitBuilderPrefab;
+    public Structure structureDefenceTowerPrefab;
 
     [HideInInspector] public TileData[,] tileDataMap;
     [HideInInspector] public TileObject[,] tileObjectMap;
     [HideInInspector] public List<TileObject> allTiles = new List<TileObject>();
-    
-    private List<Unit> units = new List<Unit>();
+    [HideInInspector] public List<Unit> units = new List<Unit>();
 
     protected override void Awake() {
         Build();
         SpawnUnit(unitarvesterPrefab, 54, 54);
-        SpawnUnit(unitScoutPrefab, 56, 54);
+        SpawnUnit(unitarvesterPrefab, 55, 54);
+        SpawnUnit(unitScoutPrefab, 57, 54);
+        SpawnUnit(unitFighterPrefab, 55, 52);
+        SpawnUnit(unitFighterPrefab, 56, 52);
+        SpawnUnit(unitBuilderPrefab, 59, 48);
     }
 
     public void Build() {
@@ -78,7 +82,10 @@ public class World : Singleton<World> {
 
     public void SpawnUnit(Unit prefab, int i, int j) {
         Unit unit = Instantiate(prefab.gameObject, GetTilePos(i, j), Quaternion.identity, unitContainer).GetComponent<Unit>();
+        // unit.movement.lookDir = Vector3.up * 180;
+        // unit.model.transform.rotation = Quaternion.Euler(unit.movement.lookDir);
         unit.tile = tileDataMap[i, j];
+
         units.Add(unit);
     }
 

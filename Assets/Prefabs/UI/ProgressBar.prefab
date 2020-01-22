@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8388238118085207420}
   - component: {fileID: 8388238118085207422}
   - component: {fileID: 8388238118085207421}
-  - component: {fileID: 1798903066}
+  - component: {fileID: 1312907696}
   m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
@@ -75,7 +75,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &1798903066
+--- !u!114 &1312907696
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -102,7 +102,7 @@ GameObject:
   - component: {fileID: 8388238118735630759}
   - component: {fileID: 8388238118735630761}
   m_Layer: 5
-  m_Name: HealthBar
+  m_Name: ProgressBar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -209,7 +209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.8396226, g: 0.45545566, b: 0.46290305, a: 1}
+  m_Color: {r: 0.9056604, g: 0.7369574, b: 0.51690996, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:

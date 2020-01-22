@@ -9,10 +9,15 @@ public class WorldSurface : MonoBehaviour {
     public Transform gridLines;
     public LineRenderer[] gridLinesX, gridLinesZ;
 
-    public bool isChoosingTile;
+    [HideInInspector] public bool isChoosingTile;
+    [HideInInspector] public Vector3 mouseHitPoint;
+    [HideInInspector] public Vector2Int tileHitCoords;
 
     void Update() {
-        bool hit = GetMousedOverCoordinates(out Vector3 hitPoint, out Vector2Int hitCoords);
+        bool hit = getMousedOverCoordinates(out Vector3 hitPoint, out Vector2Int hitCoords);
+        mouseHitPoint = hitPoint;
+        tileHitCoords = hitCoords;
+        
         tileSelect.SetActive(hit && isChoosingTile);
         gridLines.gameObject.SetActive(hit && isChoosingTile);
         if (hit) {
@@ -35,7 +40,7 @@ public class WorldSurface : MonoBehaviour {
     }
 
     // Calculates the point on the ground hit by the mouse, and the coordinates of that tile
-    public bool GetMousedOverCoordinates(out Vector3 hitPoint, out Vector2Int hitCoords) {
+    private bool getMousedOverCoordinates(out Vector3 hitPoint, out Vector2Int hitCoords) {
         Ray ray = CameraController.instance.camera.ScreenPointToRay(Input.mousePosition);
         bool hit = Physics.Raycast(ray, out RaycastHit hitInfo, float.MaxValue, 1 << LayerMask.NameToLayer("Ground"));
         if(hit) {

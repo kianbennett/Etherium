@@ -47,12 +47,12 @@ public class InputHandler : Singleton<InputHandler> {
             onRightClickHold();
         }
 
-        if (Input.GetMouseButtonUp(0)) {
+        if (leftClickHeld && Input.GetMouseButtonUp(0)) {
             leftClickHeld = false;
             onLeftClickRelease();
         }
 
-        if (Input.GetMouseButtonUp(1)) {
+        if (rightClickHeld && Input.GetMouseButtonUp(1)) {
             rightClickHeld = false;
             onRightClickRelease();
         }
@@ -81,11 +81,12 @@ public class InputHandler : Singleton<InputHandler> {
     }
 
     private void onLeftClickDown() {
+        PlayerController.instance.CancelBuildingPlacement();
     }
 
     private void onLeftClickDragStart() {
         HUD.instance.selectionBox.Show();
-        PlayerController.instance.DeselectAllCharacters();
+        PlayerController.instance.DeselectAll();
     }
 
     private void onLeftClickHold() {
@@ -99,7 +100,7 @@ public class InputHandler : Singleton<InputHandler> {
 
     private void onLeftClickRelease() {
         if (leftClickDelta.magnitude == 0) {
-            PlayerController.instance.DeselectAllCharacters();
+            PlayerController.instance.DeselectAll();
             if (PlayerController.instance.objectHovered) {
                 PlayerController.instance.objectHovered.OnLeftClick();
             }
@@ -124,11 +125,11 @@ public class InputHandler : Singleton<InputHandler> {
             if (PlayerController.instance.objectHovered) {
                 PlayerController.instance.objectHovered.OnRightClick();
             } else {
-                bool hit = World.instance.surface.GetMousedOverCoordinates(out Vector3 hitPoint, out Vector2Int hitCoords);
+                // bool hit = World.instance.surface.GetMousedOverCoordinates(out Vector3 hitPoint, out Vector2Int hitCoords);
+                Vector2Int hitCoords = World.instance.surface.tileHitCoords;
                 if(World.instance.generator.IsInBounds(hitCoords.x, hitCoords.y)) {
                     TileData tile = World.instance.tileDataMap[hitCoords.x, hitCoords.y];
-                    // Debug.Log(hitPoint + ", " + hitCoords + ", " + tile.type);
-                    if (hit) PlayerController.instance.MoveUnits(tile, true);
+                    PlayerController.instance.RightClickTile(tile);
                 } else {
                     Debug.Log("Point outside world :(");
                 }
