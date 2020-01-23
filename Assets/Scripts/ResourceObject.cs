@@ -17,11 +17,16 @@ public class ResourceObject : WorldObject {
     private const float shakeInterval = 0.05f, shakeDist = 0.05f;
     private Vector3 shakeOffset;
 
+    private Healthbar resourceBar;
+
     protected override void Awake() {
+        base.Awake();
+        
         resourceAmount = 1;
 
         lastHarvestTime = float.MaxValue;
-        HUD.instance.CreateResourceBar(this);
+        // HUD.instance.CreateResourceBar(this);
+        resourceBar = HUD.instance.CreateResourceBar();
     }
 
     protected override void Update() {
@@ -47,7 +52,7 @@ public class ResourceObject : WorldObject {
         foreach(GameObject model in models) {
             model.transform.localPosition = shakeOffset;
         }
-        HUD.instance.GetResourceBar(this).offset = shakeOffset;
+        updateResourceBar();
     }
 
     public override void OnRightClick() {
@@ -70,5 +75,17 @@ public class ResourceObject : WorldObject {
         for(int i = 0; i < models.Length; i++) {
             models[i].SetActive(a <= i && a > i - 1);
         }
+    }
+
+    private void updateResourceBar() {
+        bool show = resourceBar.isOnScreen() && (IsHovered() || lastHarvestTime < 1.0f);
+        resourceBar.SetWorldPos(transform.position + Vector3.up * 1.5f);
+        resourceBar.gameObject.SetActive(show);
+        resourceBar.SetPercentage(resourceAmount);
+        resourceBar.offset = shakeOffset;
+    }
+
+    void OnDestroy() {
+        Destroy(resourceBar.gameObject);
     }
 }

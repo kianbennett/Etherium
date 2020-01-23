@@ -17,7 +17,7 @@ public class World : Singleton<World> {
     public WorldObject minePrefab;
     public WorldObject mineralPrefab;
     public Unit unitarvesterPrefab, unitScoutPrefab, unitFighterPrefab, unitBuilderPrefab;
-    public Structure structureDefenceTowerPrefab;
+    public Structure structureDefenceTowerPrefab, structureWallPrefab, structureWallCornerPrefab;
 
     [HideInInspector] public TileData[,] tileDataMap;
     [HideInInspector] public TileObject[,] tileObjectMap;
@@ -95,6 +95,13 @@ public class World : Singleton<World> {
 
     public Vector3 GetTilePos(TileData tile) {
         return GetTilePos(tile.i, tile.j);
+    }
+
+    public TileObject GetTileObjectAt(int i, int j) {
+        if(generator.IsInBounds(i, j)) {
+            return tileObjectMap[i, j];
+        }
+        return null;
     }
 
     private void clear() {

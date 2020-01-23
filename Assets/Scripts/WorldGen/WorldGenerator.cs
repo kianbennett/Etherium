@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public enum TileType { None, Ground, Mine, Mineral, Base };
+public enum TileType { None, Ground, Mine, Mineral, Base, Structure };
 
 public class Island {
     public Vector2Int origin;
@@ -23,6 +23,7 @@ public class TileData {
     public TileType type;
     public int island;
     public Unit occupiedUnit;
+    public Structure occupiedStructure;
 
     public Vector2Int pos { get { return new Vector2Int(i, j); } }
     public Vector3 worldPos { get { return World.instance.GetTilePos(this); } }

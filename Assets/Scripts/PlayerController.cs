@@ -6,7 +6,7 @@ using System.Linq;
 public class PlayerController : Singleton<PlayerController> {
 
     public GameObject moveMarkerPrefab;
-    public Material buildingGhostMaterialGood, buildingGhostMaterialBad;
+    public Material buildingGhostMaterial, buildingGhostMaterialSet;
 
     [HideInInspector] public List<WorldObject> selectedObjects;
     [ReadOnly] public WorldObject objectHovered;
@@ -18,6 +18,7 @@ public class PlayerController : Singleton<PlayerController> {
     private GameObject buildingGhostModel;
     private UnitBuilder unitToBuild;
     private Structure structureToBuild;
+    private float structureRotation;
 
     protected override void Awake() {
         base.Awake();
@@ -34,13 +35,18 @@ public class PlayerController : Singleton<PlayerController> {
         if(isPlacingBuilding && buildingGhostModel != null) {
             TileData tileHovered = World.instance.tileDataMap[World.instance.surface.tileHitCoords.x, World.instance.surface.tileHitCoords.y];
             buildingGhostModel.transform.position = World.instance.GetTilePos(tileHovered);
-            // buildingGhostModel.SetActive(tileHovered.type == TileType.None || tileHovered.type == TileType.Ground);
-            // if(buildingGhostModel.activeSelf) {
-            //     buildingGhostModel.material = tileHovered.type == TileType.Ground ? buildingGhostMaterialGood : buildingGhostMaterialBad;
-            // }
+            buildingGhostModel.transform.rotation = Quaternion.Lerp(buildingGhostModel.transform.rotation, Quaternion.Euler(Vector3.up * structureRotation), Time.deltaTime * 20);
+            buildingGhostModel.SetActive(tileHovered.type == TileType.None || tileHovered.type == TileType.Ground);
         }
 
         if(Input.GetKeyDown(KeyCode.A)) Build(World.instance.structureDefenceTowerPrefab);
+        if(Input.GetKeyDown(KeyCode.S)) Build(World.instance.structureWallPrefab);
+        if(Input.GetKeyDown(KeyCode.D)) Build(World.instance.structureWallCornerPrefab);
+
+        if(isPlacingBuilding) {
+            if(Input.GetKeyDown(KeyCode.Q)) structureRotation -= 90;
+            if(Input.GetKeyDown(KeyCode.E)) structureRotation += 90;
+        }
     }
 
     public void SelectObject(WorldObject worldObject) {
@@ -102,11 +108,11 @@ public class PlayerController : Singleton<PlayerController> {
 
     public void StartBuildingPlacement(UnitBuilder unit, Structure structure) {
         if(buildingGhostModel) Destroy(buildingGhostModel);
-        buildingGhostModel = Instantiate(structure.Model);
+        buildingGhostModel = Instantiate(structure.model);
         Vector2Int tileHovered = World.instance.surface.tileHitCoords;
         buildingGhostModel.transform.position = World.instance.GetTilePos(tileHovered.x, tileHovered.y);
         foreach(MeshRenderer renderer in buildingGhostModel.GetComponentsInChildren<MeshRenderer>()) {
-            renderer.material = buildingGhostMaterialGood;
+            renderer.material = buildingGhostMaterial;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
         }
@@ -114,6 +120,7 @@ public class PlayerController : Singleton<PlayerController> {
         unitToBuild = unit;
         structureToBuild = structure;
         isPlacingBuilding = true;
+        structureRotation = 0;
     }
 
     public void CancelBuildingPlacement() {
@@ -121,10 +128,20 @@ public class PlayerController : Singleton<PlayerController> {
         isPlacingBuilding = false;
     }
 
+    public void LeftClickTile(TileData tile) {
+        if(isPlacingBuilding) {
+            isPlacingBuilding = false;
+            foreach(MeshRenderer renderer in buildingGhostModel.GetComponentsInChildren<MeshRenderer>()) {
+                renderer.material = buildingGhostMaterialSet;
+            }
+            unitToBuild.Build(structureToBuild, tile, buildingGhostModel, structureRotation);
+            buildingGhostModel = null;
+        }
+    }
+
     public void RightClickTile(TileData tile) {
         if(isPlacingBuilding) {
             CancelBuildingPlacement();
-            unitToBuild.Build(structureToBuild, tile, buildingGhostModel);
         } else {
             MoveUnits(tile, true);
         }

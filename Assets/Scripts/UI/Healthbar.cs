@@ -9,10 +9,15 @@ public class Healthbar : MonoBehaviour {
     public Vector3 offset;
 
     public void SetPercentage(float value) {
-        barContainer.localScale = new Vector3(value, 1, 1);
+        if(value != 0) barContainer.localScale = new Vector3(value, 1, 1);
     }
 
-    public void SetPosition(Vector3 pos) {
+    // public void SetPosition(Vector3 pos) {
+    //     transform.position = pos + offset * 70; // offset needs to be scaled up to screen coordinate range
+    // }
+
+    public void SetWorldPos(Vector3 worldPos) {
+        Vector3 pos = CameraController.instance.camera.WorldToScreenPoint(worldPos);
         transform.position = pos + offset * 70; // offset needs to be scaled up to screen coordinate range
     }
 

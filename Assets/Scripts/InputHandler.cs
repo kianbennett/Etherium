@@ -81,7 +81,6 @@ public class InputHandler : Singleton<InputHandler> {
     }
 
     private void onLeftClickDown() {
-        PlayerController.instance.CancelBuildingPlacement();
     }
 
     private void onLeftClickDragStart() {
@@ -100,9 +99,20 @@ public class InputHandler : Singleton<InputHandler> {
 
     private void onLeftClickRelease() {
         if (leftClickDelta.magnitude == 0) {
-            PlayerController.instance.DeselectAll();
+            if(!PlayerController.instance.isPlacingBuilding) {
+                PlayerController.instance.DeselectAll();
+            }
             if (PlayerController.instance.objectHovered) {
                 PlayerController.instance.objectHovered.OnLeftClick();
+            } else {
+                // bool hit = World.instance.surface.GetMousedOverCoordinates(out Vector3 hitPoint, out Vector2Int hitCoords);
+                Vector2Int hitCoords = World.instance.surface.tileHitCoords;
+                if(World.instance.generator.IsInBounds(hitCoords.x, hitCoords.y)) {
+                    TileData tile = World.instance.tileDataMap[hitCoords.x, hitCoords.y];
+                    PlayerController.instance.LeftClickTile(tile);
+                } else {
+                    Debug.Log("Point outside world :(");
+                }
             }
         }
         HUD.instance.selectionBox.Hide();

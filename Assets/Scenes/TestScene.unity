@@ -1000,6 +1000,8 @@ MonoBehaviour:
     type: 3}
   healthBarPrefab: {fileID: 8388238118735630761, guid: 933e6417b3df25846bbb332c097b4039,
     type: 3}
+  progressBarPrefab: {fileID: 8388238118735630761, guid: 1c1a4d5088f15e849ac22adb78f2617c,
+    type: 3}
   unitIconPrefab: {fileID: 4419455733594673206, guid: e43df8840f66b474e9c74c42f345a1e4,
     type: 3}
 --- !u!1 &364310196
@@ -1346,9 +1348,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveMarkerPrefab: {fileID: 159011422889481369, guid: 587c5774c34b09b40bc7aa65f5360d14,
     type: 3}
-  buildingGhostMaterialGood: {fileID: 2100000, guid: 8bdac228a03bf0444a7a2b401371d13e,
+  buildingGhostMaterial: {fileID: 2100000, guid: 8bdac228a03bf0444a7a2b401371d13e,
     type: 2}
-  buildingGhostMaterialBad: {fileID: 2100000, guid: a8907b993f720ea4e9df80464b964be2,
+  buildingGhostMaterialSet: {fileID: 2100000, guid: 7df1c000ecfccf74b8782a6bf5375f8b,
     type: 2}
   selectedObjects: []
   objectHovered: {fileID: 0}
@@ -1797,6 +1799,10 @@ MonoBehaviour:
   unitBuilderPrefab: {fileID: 7692594494314635417, guid: e42d2b49544e04d48bb85196b2b691d2,
     type: 3}
   structureDefenceTowerPrefab: {fileID: 8438492440338747975, guid: c5b790a0d3553c64fb729bc4ffb6b3f0,
+    type: 3}
+  structureWallPrefab: {fileID: 6329214780220644331, guid: 242db05ac8561864784e6309241d3619,
+    type: 3}
+  structureWallCornerPrefab: {fileID: 6329214780220644331, guid: 0ffd8535f2cfde348b187659d3a056bf,
     type: 3}
   allTiles: []
   units: []

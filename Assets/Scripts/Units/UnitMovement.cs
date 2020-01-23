@@ -54,11 +54,6 @@ public class UnitMovement : MonoBehaviour {
             return;
         }
 
-        // Put previous tile at the beginning of the path to avoid awkward movement when moving between tiles
-        if(pathNodes != null) {
-            path.Insert(0, pathNodes[targetNode - 1]);
-        }
-
         // If there is already a unit moving to the destination then remove the last tile and move to the next free tile
         do {
             if(target.occupiedUnit != null && target.occupiedUnit != unit) {
@@ -75,6 +70,11 @@ public class UnitMovement : MonoBehaviour {
     }
 
     public void SetPath(List<TileData> path) {
+        // Put previous tile at the beginning of the path to avoid awkward movement when moving between tiles
+        if(pathNodes != null) {
+            path.Insert(0, pathNodes[targetNode - 1]);
+        }
+
         pathNodes = path;
         hasReachedDestination = false;
         totalPathLength = (pathNodes.Count - 1) * World.tileSize;

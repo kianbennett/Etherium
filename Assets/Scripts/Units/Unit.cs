@@ -15,12 +15,16 @@ public class Unit : WorldObject {
     public float healthMax;
     [ReadOnly] public float healthCurrent;
 
+    private Healthbar healthbar;
+
     protected override void Awake() {
         base.Awake();
 
         healthCurrent = healthMax;
 
-        HUD.instance.CreateHealthbar(this);
+        healthbar = HUD.instance.CreateHealthbar();
+        healthbar.rect.sizeDelta = new Vector2(Mathf.Clamp(healthMax * 8, 0, 80), healthbar.rect.sizeDelta.y);
+
         HUD.instance.CreateUnitIcon(this);
     }
 
@@ -42,6 +46,8 @@ public class Unit : WorldObject {
                     else dustParticles.Stop();
             }
         }
+
+        updateHealthbar();
         
         // TODO: Look at this
         // bool hasPath = movement.pathNodes != null;
@@ -83,6 +89,20 @@ public class Unit : WorldObject {
         return HUD.instance.selectionBox.Rect.rect.Contains(point - HUD.instance.selectionBox.transform.position);
     }
 
+    public void Damage(int damage) {
+        healthCurrent -= damage;
+        if(healthCurrent <= 0) {
+            Destroy(gameObject);
+        }
+    }
+
+    private void updateHealthbar() {
+        bool show = healthbar.isOnScreen() && (IsHovered() || IsSelected());
+        healthbar.SetWorldPos(transform.position + Vector3.up * 1.0f);
+        healthbar.gameObject.SetActive(show);
+        healthbar.SetPercentage((float) healthCurrent / healthMax);
+    }
+
     void OnDestroy() {
         if(PlayerController.instance) {
             if (PlayerController.instance.selectedObjects.Contains(this)) {
@@ -95,12 +115,6 @@ public class Unit : WorldObject {
         if(World.instance) {
             World.instance.units.Remove(this);
         }
-    }
-
-    public void Damage(int damage) {
-        healthCurrent -= damage;
-        if(healthCurrent <= 0) {
-            Destroy(gameObject);
-        }
+        Destroy(healthbar.gameObject);
     }
 }
