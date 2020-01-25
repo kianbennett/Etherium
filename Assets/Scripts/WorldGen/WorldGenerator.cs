@@ -10,6 +10,8 @@ public class Island {
     public int size;
     public TileData[] tiles;
 
+    public Vector2Int centre { get { return new Vector2Int((int) ((float) size / 2), (int) ((float) size / 2)); } }
+
     // public void setTileType(int i, int j, TileType type) {
     //     TileData[] results = tiles.Where(o => o.i == i && o.j == j).ToArray();
     //     if(results.Length > 0) {
@@ -76,22 +78,44 @@ public class WorldGenerator : MonoBehaviour {
 
         // Create islands
         List<Island> islands = new List<Island>();
+
+        Island playerIsland = generateIsland(new Vector2Int(0, 0), Random.Range(minIslandSize, maxIslandSize), 0);
+        populateIsland(playerIsland);
+        islands.Add(playerIsland);
+
+        Island enemyIsland = generateIsland(new Vector2Int(worldSize - (int) (maxIslandSize / 2.0f), worldSize - (int) (maxIslandSize / 2.0f)), Random.Range(minIslandSize, maxIslandSize), 1);
+        populateIsland(enemyIsland);
+        islands.Add(enemyIsland);
+
         for(int i = 0; i < islandCount; i++) {
             int size = Random.Range(minIslandSize, maxIslandSize);
             Vector2Int pos = getNextPointInArea(islands.Select(o => o.origin).ToArray(), size);
             Island island = generateIsland(pos, size, i);
             populateIsland(island);
             islands.Add(island);
-            foreach(TileData tile in islands[i].tiles) {
-                if(IsInBounds(tile.i, tile.j)) {
-                    tileMap[tile.i, tile.j] = tile;
-                }
-            }
             // Temporarily add a base at the centre of each island
             // tileMap[island.origin.x + (int) ((float) island.size / 2), island.origin.y + (int) ((float) island.size / 2)].type = TileType.Base;
         }
 
-        tileMap[56, 46].type = TileType.Base;
+        foreach(Island island in islands) {
+            foreach(TileData tile in island.tiles) {
+                if(IsInBounds(tile.i, tile.j)) {
+                    tileMap[tile.i, tile.j] = tile;
+                }
+            }
+        }
+
+        // Clear out area around base
+        int clearRadius = 3;
+        for(int i = 0; i < clearRadius * 2; i++) {
+            for(int j = 0; j < clearRadius * 2; j++) {
+                if(Vector2.Distance(new Vector2(i, j), new Vector2(clearRadius, clearRadius)) <= clearRadius) {
+                    tileMap[playerIsland.centre.x + i, playerIsland.centre.y].type = TileType.Ground;
+                }
+            }   
+        }
+
+        tileMap[playerIsland.centre.x, playerIsland.centre.y].type = TileType.Base;
 
         setUpConnections(tileMap);
 

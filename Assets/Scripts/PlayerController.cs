@@ -7,6 +7,7 @@ public class PlayerController : Singleton<PlayerController> {
 
     public GameObject moveMarkerPrefab;
     public Material buildingGhostMaterial, buildingGhostMaterialSet;
+    public Material buildingGhostMaterialBad;
 
     [HideInInspector] public List<WorldObject> selectedObjects;
     [ReadOnly] public StructureBase playerBase;
@@ -17,6 +18,7 @@ public class PlayerController : Singleton<PlayerController> {
 
     // Perhaps move this to UnitBuilder
     private GameObject structureGhostModel;
+    private Renderer[] structureGhostRenderers;
     private UnitBuilder unitToBuild;
     private Structure structureToBuild;
     private float structureRotation;
@@ -34,18 +36,25 @@ public class PlayerController : Singleton<PlayerController> {
         }
 
         if(isPlacingStructure && structureGhostModel != null && !HUD.instance.IsMouseOverHUD()) {
-            TileData tileHovered = World.instance.tileDataMap[World.instance.surface.tileHitCoords.x, World.instance.surface.tileHitCoords.y];
-            structureGhostModel.transform.position = World.instance.GetTilePos(tileHovered);
-            structureGhostModel.transform.rotation = Quaternion.Lerp(structureGhostModel.transform.rotation, Quaternion.Euler(Vector3.up * structureRotation), Time.deltaTime * 20);
-            bool canBuild = tileHovered.type == TileType.None || tileHovered.type == TileType.Ground;
-            // if(structureToBuild is StructureBridge && tileHovered.type != TileType.None) canBuild = false;
-            structureGhostModel.SetActive(canBuild);
+            if(HUD.instance.IsMouseOverHUD()) {
+                structureGhostModel.SetActive(false);
+            } else {
+                TileData tileHovered = World.instance.tileDataMap[World.instance.surface.tileHitCoords.x, World.instance.surface.tileHitCoords.y];
+                structureGhostModel.transform.position = World.instance.GetTilePos(tileHovered);
+                structureGhostModel.transform.rotation = Quaternion.Lerp(structureGhostModel.transform.rotation, Quaternion.Euler(Vector3.up * structureRotation), Time.deltaTime * 20);
+                bool canBuild = true;
+                if(structureToBuild is StructureBridge) {
+                    if(tileHovered.type != TileType.None || tileHovered.connections.Where(o => o.type == TileType.Ground).Count() == 0) {
+                        canBuild = false;    
+                    }
+                } else if(tileHovered.type != TileType.Ground || tileHovered.occupiedUnit != null) {
+                    canBuild = false;
+                }
+                foreach(Renderer renderer in structureGhostRenderers) {
+                    renderer.material = canBuild ? buildingGhostMaterial : buildingGhostMaterialBad;
+                }
+            }
         }
-
-        // if(Input.GetKeyDown(KeyCode.A)) Build(World.instance.structureDefenceTowerPrefab);
-        // if(Input.GetKeyDown(KeyCode.S)) Build(World.instance.structureWallPrefab);
-        // if(Input.GetKeyDown(KeyCode.D)) Build(World.instance.structureWallCornerPrefab);
-        // if(Input.GetKeyDown(KeyCode.F)) Build(World.instance.structureBridgePrefab);
 
         if(isPlacingStructure) {
             if(Input.GetKeyDown(KeyCode.Q)) structureRotation -= 90;
@@ -94,12 +103,12 @@ public class PlayerController : Singleton<PlayerController> {
         }
     }
 
-    public void AttackUnit(Unit target) {
+    public void AttackObject(WorldObject worldObject) {
         UnitFighter[] selectedUnits = selectedObjects.Where(o => o is UnitFighter).Select(o => (UnitFighter) o).ToArray();
         if(selectedUnits.Length == 0) return;
 
         for(int i = 0; i < selectedUnits.Length; i++) {
-            if(selectedUnits[i] != target) selectedUnits[i].Attack(target);
+            if(selectedUnits[i] != worldObject) selectedUnits[i].Attack(worldObject);
         }
     }
 
@@ -115,7 +124,8 @@ public class PlayerController : Singleton<PlayerController> {
         structureGhostModel = Instantiate(structure.model);
         Vector2Int tileHovered = World.instance.surface.tileHitCoords;
         structureGhostModel.transform.position = World.instance.GetTilePos(tileHovered.x, tileHovered.y);
-        foreach(MeshRenderer renderer in structureGhostModel.GetComponentsInChildren<MeshRenderer>()) {
+        structureGhostRenderers = structureGhostModel.GetComponentsInChildren<MeshRenderer>();
+        foreach(MeshRenderer renderer in structureGhostRenderers) {
             renderer.material = buildingGhostMaterial;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
@@ -130,6 +140,41 @@ public class PlayerController : Singleton<PlayerController> {
     public void CancelBuildingPlacement() {
         if(structureGhostModel) Destroy(structureGhostModel);
         isPlacingStructure = false;
+    }
+
+    public void RepairUnit() {
+        Unit[] selectedUnits = selectedObjects.Where(o => o is Unit).Select(o => (Unit) o).ToArray();
+        int cost = 0;
+        foreach(Unit unit in selectedUnits) {
+            cost += unit.GetRepairCost();
+        }
+        if(GameManager.instance.gems >= cost) {
+            GameManager.instance.AddGems(-cost);
+            foreach(Unit unit in selectedUnits) {
+                unit.healthCurrent = unit.healthMax;
+            }
+        }
+    }
+
+    public void RepairStructure() {
+        Structure[] selectedStructures = selectedObjects.Where(o => o is Structure).Select(o => (Structure) o).ToArray();
+        int cost = 0;
+        foreach(Structure structure in selectedStructures) {
+            cost += structure.GetRepairCost();
+        }
+        if(GameManager.instance.minerals >= cost) {
+            GameManager.instance.AddMinerals(-cost);
+            foreach(Structure structure in selectedStructures) {
+                structure.healthCurrent = structure.healthMax;
+            }
+        }
+    }
+
+    public void StopMoving() {
+        Unit[] selectedUnits = selectedObjects.Where(o => o is Unit).Select(o => (Unit) o).ToArray();
+        foreach(Unit unit in selectedUnits) {
+            unit.movement.StopMoving();
+        }
     }
 
     public void LeftClickTile(TileData tile) {

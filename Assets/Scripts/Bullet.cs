@@ -6,7 +6,7 @@ public class Bullet : MonoBehaviour {
 
     public GameObject explosionParticlePrefab;
 
-    private Unit target;
+    private WorldObject target;
     private float speed;
     private int damage;
 
@@ -20,16 +20,17 @@ public class Bullet : MonoBehaviour {
         transform.position += transform.forward * speed * Time.deltaTime;
     }
 
-    public void Init(Unit target, float speed, int damage) {
+    public void Init(WorldObject target, float speed, int damage) {
         this.target = target;
         this.speed = speed;
         this.damage = damage;
     }
 
     void OnTriggerEnter(Collider other) {
-        Unit unit = other.gameObject.GetComponent<Unit>();
-        if(unit != null && unit == target) {
-            unit.Damage(damage);
+        WorldObject worldObject = other.gameObject.GetComponent<WorldObject>();
+        if(worldObject != null && worldObject == target) {
+            if(worldObject is Unit) ((Unit) worldObject).Damage(damage);
+            if(worldObject is Structure) ((Structure) worldObject).Damage(damage);
             Instantiate(explosionParticlePrefab, transform.position, Quaternion.identity);
             Destroy(gameObject);
         }

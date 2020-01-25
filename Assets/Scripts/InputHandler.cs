@@ -57,7 +57,7 @@ public class InputHandler : Singleton<InputHandler> {
             onRightClickRelease();
         }
 
-        if(Input.GetKeyDown(KeyCode.P)) GameManager.instance.TogglePaused();
+        if(Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape)) GameManager.instance.TogglePaused();
     }
 
     private void handleKeys() {

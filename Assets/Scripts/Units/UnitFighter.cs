@@ -11,7 +11,7 @@ public class UnitFighter : Unit {
     public int damage;
     public float range;
     
-    private Unit target;
+    private WorldObject target;
     private float fireTick;
     private bool isInRange;    
     private bool isMovingToTarget;
@@ -46,18 +46,26 @@ public class UnitFighter : Unit {
         }
     }
 
-    public void Attack(Unit target) {
+    public void Attack(WorldObject target) {
         if(this.target == target) return;
         this.target = target;
         float distToTarget = Vector2Int.Distance(target.tile.pos, tile.pos);
         fireTick = fireInterval - fireChargeupTime;
         if(distToTarget > range) {
-            MoveAndKeepTarget(target.tile);
+            // Pathfinder will reject a path towards a structure tile, so temporarily set the tile type to ground to get a path
+            // Bit of a hack, should be changed later
+            if(target is Structure) {
+                target.tile.type = TileType.Ground;
+                MoveAndKeepTarget(target.tile);
+                target.tile.type = TileType.Structure;
+            } else {
+                MoveAndKeepTarget(target.tile);
+            }
             isMovingToTarget = true;
         }
     }
 
-    public void ShootBullet(Unit target) {
+    public void ShootBullet(WorldObject target) {
         Bullet bullet = Instantiate(bulletPrefab.gameObject, bulletSpawnPoint.position, Quaternion.identity).GetComponent<Bullet>();
         bullet.Init(target, bulletSpeed, damage);
     }

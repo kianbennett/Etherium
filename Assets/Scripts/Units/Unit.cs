@@ -77,9 +77,9 @@ public class Unit : WorldObject {
     }
 
     public override void OnRightClick() {
-        base.OnLeftClick();
+        base.OnRightClick();
 
-        PlayerController.instance.AttackUnit(this);
+        PlayerController.instance.AttackObject(this);
     }
 
     public virtual void MoveToPoint(TileData tile) {
@@ -105,7 +105,11 @@ public class Unit : WorldObject {
         healthbar.SetPercentage((float) healthCurrent / healthMax);
     }
 
-    void OnDestroy() {
+    public int GetRepairCost() {
+        return (int) ((healthMax - healthCurrent) * 2.0f);
+    }
+
+    protected virtual void OnDestroy() {
         if(PlayerController.instance) {
             if (PlayerController.instance.selectedObjects.Contains(this)) {
                 PlayerController.instance.selectedObjects.Remove(this);

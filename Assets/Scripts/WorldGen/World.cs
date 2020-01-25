@@ -16,8 +16,9 @@ public class World : Singleton<World> {
     public WorldObject basePrefab;
     public WorldObject minePrefab;
     public WorldObject mineralPrefab;
-    public Unit unitarvesterPrefab, unitScoutPrefab, unitFighterPrefab, unitBuilderPrefab;
-    public Structure structureDefenceTowerPrefab, structureWallPrefab, structureWallCornerPrefab, structureBridgePrefab;
+    public Unit unitHarvesterPrefab;
+    // public Unit unitHarvesterPrefab, unitScoutPrefab, unitFighterPrefab, unitBuilderPrefab;
+    // public Structure structureDefenceTowerPrefab, structureWallPrefab, structureWallCornerPrefab, structureBridgePrefab, structureWarehousePrefab;
 
     [HideInInspector] public TileData[,] tileDataMap;
     [HideInInspector] public TileObject[,] tileObjectMap;
@@ -26,12 +27,13 @@ public class World : Singleton<World> {
 
     protected override void Awake() {
         Build();
-        SpawnUnit(unitarvesterPrefab, 54, 54);
-        SpawnUnit(unitarvesterPrefab, 55, 54);
-        SpawnUnit(unitScoutPrefab, 57, 54);
-        SpawnUnit(unitFighterPrefab, 55, 52);
-        SpawnUnit(unitFighterPrefab, 56, 52);
-        SpawnUnit(unitBuilderPrefab, 59, 48);
+        Debug.Log(PlayerController.instance.playerBase.tile.pos);
+        SpawnUnit(unitHarvesterPrefab, PlayerController.instance.playerBase.tile.i, PlayerController.instance.playerBase.tile.j - 1);
+        CameraController.instance.SetAbsolutePosition(PlayerController.instance.playerBase.transform.position);
+        // SpawnUnit(unitScoutPrefab, 57, 54);
+        // SpawnUnit(unitFighterPrefab, 55, 52);
+        // SpawnUnit(unitFighterPrefab, 56, 52);
+        // SpawnUnit(unitBuilderPrefab, 59, 48);
     }
 
     public void Build() {
@@ -77,6 +79,7 @@ public class World : Singleton<World> {
                 if(worldObject != null) {
                     worldObject.transform.SetParent(tile.transform, false);
                     worldObject.tile = tile.tileData;
+                    // if(worldObject is StructureBase) Debug.Log("BASE: " + tile.tileData.pos);
                 }
 			}
 		}

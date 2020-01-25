@@ -20,7 +20,7 @@ public class StructureBase : Structure {
 
         if(unitBuildQueue.Count > 0) {
             buildTick += Time.deltaTime;
-            if(buildTick > buildTime) {
+            if(buildTick > unitBuildQueue[0].buildTime) {
                 buildTick = 0;
                 spawnUnit(unitBuildQueue[0]);
                 unitBuildQueue.RemoveAt(0);
@@ -101,7 +101,8 @@ public class StructureBase : Structure {
         }
     }
 
-    void OnDestroy() {
+    protected override void OnDestroy() {
+        base.OnDestroy();
         if(progressBar) Destroy(progressBar.gameObject);
     }
 }

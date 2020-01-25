@@ -30,11 +30,11 @@ public class WorldObject : MonoBehaviour {
         }
     }
 
-    void OnMouseEnter() {
+    protected virtual void OnMouseEnter() {
         if(!HUD.instance.IsMouseOverHUD()) SetHovered(true);
     }
 
-    void OnMouseExit() {
+    protected virtual void OnMouseExit() {
         SetHovered(false);
     }
 

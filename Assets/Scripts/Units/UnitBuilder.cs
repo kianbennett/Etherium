@@ -31,6 +31,11 @@ public class UnitBuilder : Unit {
 
                 buildAmount += Time.deltaTime;
                 isBuilding = true;
+
+                // If the player has lost the required resources on the journey then cancel the build
+                if(GameManager.instance.minerals < structureToBuild.buildCost) {
+                    cancelBuilding();
+                }
                 
                 if(buildAmount >= structureToBuild.buildTime) {
                     buildAmount = 0;
@@ -68,12 +73,12 @@ public class UnitBuilder : Unit {
                 movement.SetPath(path);    
             }
         } else {
-            Destroy(ghostModel);
+            cancelBuilding();
         }
     }
 
     private void spawnStructure() {
-        if(structureToBuild != null && targetTile != null) {
+        if(structureToBuild != null && targetTile != null && GameManager.instance.minerals >= structureToBuild.buildCost) {
             Structure structure = Instantiate(structureToBuild, targetTile.worldPos, Quaternion.identity);
             structure.transform.rotation = Quaternion.Euler(Vector3.up * structureRotation);
             structure.tile = targetTile;
@@ -83,6 +88,7 @@ public class UnitBuilder : Unit {
             } else {
                 targetTile.occupiedStructure = structureToBuild;
             }
+            GameManager.instance.AddMinerals(-structureToBuild.buildCost);
         }
     }
 
@@ -112,7 +118,11 @@ public class UnitBuilder : Unit {
         }
     }
 
-    void OnDestroy() {
-        if(progressBar) Destroy(progressBar.gameObject);
+    protected override void OnDestroy() {
+        base.OnDestroy();
+        if(progressBar) {
+            cancelBuilding();
+            Destroy(progressBar.gameObject);
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public enum ResourceType { Gem, Mineral }
 
@@ -56,6 +57,8 @@ public class ResourceObject : WorldObject {
     }
 
     public override void OnRightClick() {
+        base.OnRightClick();
+
         PlayerController.instance.HarvestResource(this);
     }
 
@@ -83,6 +86,20 @@ public class ResourceObject : WorldObject {
         resourceBar.gameObject.SetActive(show);
         resourceBar.SetPercentage(resourceAmount);
         resourceBar.offset = shakeOffset;
+    }
+
+    protected override void OnMouseEnter() {
+        base.OnMouseEnter();
+        // If the player has a harvester unit selected and it at max resource, show a tooltip
+        UnitHarvester[] selectedUnits = PlayerController.instance.selectedObjects.Where(o => o is UnitHarvester).Select(o => (UnitHarvester) o).ToArray();
+        if(GameManager.instance.IsAtMaxResource(type) && selectedUnits.Length > 0) {
+            HUD.instance.ShowTooltip("At max capacity");
+        }
+    }
+
+    protected override void OnMouseExit() {
+        base.OnMouseExit();
+        HUD.instance.HideTooltip();
     }
 
     void OnDestroy() {

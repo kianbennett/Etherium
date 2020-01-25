@@ -38,9 +38,6 @@ public class BuildStructureButton : MonoBehaviour {
     }
 
     public void OnClick() {
-        if(GameManager.instance.minerals >= structurePrefab.buildCost) {
-            PlayerController.instance.Build(structurePrefab);
-            GameManager.instance.AddGems(-structurePrefab.buildCost);
-        }
+        PlayerController.instance.Build(structurePrefab);
     }
 }

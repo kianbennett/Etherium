@@ -31,6 +31,15 @@ public class Structure : WorldObject {
         PlayerController.instance.SelectObject(this);
     }
 
+    public override void OnRightClick() {
+        base.OnRightClick();
+
+        // Units with no health can't be attacked (e.g. base)
+        if(healthMax > 0) {
+            PlayerController.instance.AttackObject(this);
+        }
+    }
+
     private void updateHealthbar() {
         bool show = healthbar.isOnScreen() && (IsHovered() || IsSelected()) && healthMax > 0;
         healthbar.gameObject.SetActive(show);
@@ -40,7 +49,18 @@ public class Structure : WorldObject {
         }
     }
 
-    void OnDestroy() {
+    public int GetRepairCost() {
+        return (healthMax - healthCurrent) * 4;
+    }
+
+    public void Damage(int damage) {
+        healthCurrent -= damage;
+        if(healthCurrent <= 0) {
+            Destroy(gameObject);
+        }
+    }
+
+    protected virtual void OnDestroy() {
         if(healthbar) Destroy(healthbar.gameObject);
     }
 }

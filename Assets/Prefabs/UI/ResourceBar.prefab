@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: 8388238118735630757}
   - component: {fileID: 8388238118735630759}
   - component: {fileID: 8388238118735630761}
+  - component: {fileID: 5352820532266734954}
   m_Layer: 5
   m_Name: ResourceBar
   m_TagString: Untagged
@@ -151,6 +152,18 @@ MonoBehaviour:
   barContainer: {fileID: 8388238119422385051}
   rect: {fileID: 8388238118735630757}
   offset: {x: 0, y: 0, z: 0}
+--- !u!225 &5352820532266734954
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8388238118735630756}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!1 &8388238118901253440
 GameObject:
   m_ObjectHideFlags: 0

@@ -6,12 +6,18 @@ public class GameManager : Singleton<GameManager> {
 
     [ReadOnly] public float timer;
     [ReadOnly] public int gems, minerals;
-    public int maxGems, maxMinerals;
+    [ReadOnly] public int warehouses;
+    public int MaxGems { get { return 500 + warehouses * 500; } }
+    public int MaxMinerals { get { return 2000 + warehouses * 2000; } }
 
     [ReadOnly] public bool isPaused;
 
     protected override void Awake() {
         base.Awake();
+
+        // TODO: Remove this before release
+        gems = MaxGems;
+        minerals = MaxMinerals;
     }
 
     void Update() {
@@ -20,20 +26,20 @@ public class GameManager : Singleton<GameManager> {
 
     public void AddGems(int value) {
         gems += value;
-        gems = Mathf.Clamp(gems, 0, maxGems);
+        gems = Mathf.Clamp(gems, 0, MaxGems);
     }
 
     public void AddMinerals(int value) {
         minerals += value;
-        minerals = Mathf.Clamp(minerals, 0, maxMinerals);
+        minerals = Mathf.Clamp(minerals, 0, MaxMinerals);
     }
 
     public bool IsAtMaxResource(ResourceType type) {
         if(type == ResourceType.Gem) {
-            return gems >= maxGems;
+            return gems >= MaxGems;
         }
         if(type == ResourceType.Mineral) {
-            return minerals >= maxMinerals;
+            return minerals >= MaxMinerals;
         }    
         return false;
     }

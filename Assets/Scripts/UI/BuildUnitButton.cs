@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
 
 public class BuildUnitButton : MonoBehaviour {
     
@@ -43,4 +44,11 @@ public class BuildUnitButton : MonoBehaviour {
             GameManager.instance.AddGems(-unitPrefab.buildCost);
         }
     }
+
+    // public void OnPointerEnter(PointerEventData eventData) {
+    //     HUD.instance.ShowTooltip(eventData);
+    // }
+
+    // public void OnPointerExit(PointerEventData eventData) {
+    // }
 }
