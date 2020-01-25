@@ -6,7 +6,6 @@ using System.Linq;
 public class UnitBuilder : Unit {
 
     [ReadOnly] public float buildAmount; // percentage, 0 - 1
-    public float buildDuration;
 
     private TileData targetTile;
     private bool isBuilding;
@@ -18,6 +17,8 @@ public class UnitBuilder : Unit {
 
     protected override void Awake() {
         base.Awake();
+
+        progressBar = HUD.instance.CreateProgressBar();
     }
 
     protected override void Update() {
@@ -29,23 +30,19 @@ public class UnitBuilder : Unit {
                 movement.LookAtTile(targetTile);
 
                 buildAmount += Time.deltaTime;
-                if(progressBar) updateProgressBar();
+                isBuilding = true;
                 
-                if(buildAmount >= buildDuration) {
+                if(buildAmount >= structureToBuild.buildTime) {
                     buildAmount = 0;
-                    spawnBuilding();
+                    spawnStructure();
                     cancelBuilding();
                 }
-                if(!isBuilding) {
-                    if(progressBar) Destroy(progressBar.gameObject);
-                    progressBar = HUD.instance.CreateProgressBar();
-                }
-                isBuilding = true;
             } else if(isBuilding) {
                 // Cancel building process
                cancelBuilding();
             }
         }
+        updateProgressBar();
     }
 
     public void Build(Structure structure, TileData tile, GameObject ghostModel, float rotation) {
@@ -56,7 +53,15 @@ public class UnitBuilder : Unit {
         buildingGhostModel = ghostModel;
         buildingGhostModel.transform.rotation = Quaternion.Euler(Vector3.up * rotation);
 
-        List<TileData> path = World.instance.pathfinder.Solve(this.tile, tile, false);
+        List<TileData> path = World.instance.pathfinder.Solve(this.tile, tile, structure is StructureBridge);
+
+        // If the structure is a bridge then allow empty tiles in the path, but only one (to avoid the unit crossing empty tiles to build the structure)
+        if(structure is StructureBridge) {
+            if(path.Where(o => o.type == TileType.None).Count() != 1 || path.Last().type != TileType.None) {
+                path = null;
+            }
+        }
+        
         if(path != null) {
             if(path.Count > 1) {
                 path.Remove(path.Last());
@@ -67,13 +72,17 @@ public class UnitBuilder : Unit {
         }
     }
 
-    private void spawnBuilding() {
+    private void spawnStructure() {
         if(structureToBuild != null && targetTile != null) {
             Structure structure = Instantiate(structureToBuild, targetTile.worldPos, Quaternion.identity);
             structure.transform.rotation = Quaternion.Euler(Vector3.up * structureRotation);
             structure.tile = targetTile;
             targetTile.type = TileType.Structure;
-            targetTile.occupiedStructure = structureToBuild;
+            if(structure is StructureBridge) {
+                targetTile.type = TileType.Ground;
+            } else {
+                targetTile.occupiedStructure = structureToBuild;
+            }
         }
     }
 
@@ -83,9 +92,6 @@ public class UnitBuilder : Unit {
         structureToBuild = null;
         isBuilding = false;
         Destroy(buildingGhostModel);
-        if(progressBar) {
-            Destroy(progressBar.gameObject);
-        }
     }
 
     public void MoveAndKeepBuilding(TileData tile) {
@@ -98,10 +104,12 @@ public class UnitBuilder : Unit {
     }
 
     private void updateProgressBar() {
-        bool show = progressBar.isOnScreen();
-        progressBar.SetWorldPos(targetTile.worldPos + Vector3.up * 1.5f);
+        bool show = progressBar.isOnScreen() && isBuilding;
         progressBar.gameObject.SetActive(show);
-        progressBar.SetPercentage(buildAmount / buildDuration);
+        if(show) {
+            progressBar.SetWorldPos(targetTile.worldPos + Vector3.up * 1.5f);    
+            progressBar.SetPercentage(buildAmount / structureToBuild.buildTime);
+        }
     }
 
     void OnDestroy() {

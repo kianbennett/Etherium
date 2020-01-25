@@ -5301,8 +5301,10 @@ MonoBehaviour:
   movement: {fileID: 5858159252581679628}
   model: {fileID: 8016278647509237619}
   dustParticles: {fileID: 6494509043097519460}
-  healthMax: 10
   healthCurrent: 0
+  healthMax: 10
+  buildTime: 20
+  buildCost: 25
   bulletPrefab: {fileID: 4994337320529654110, guid: 638435611ecfb7449b8a57c57eebba3d,
     type: 3}
   bulletSpawnPoint: {fileID: 8925200939004802507}
@@ -5318,7 +5320,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4531244864017370835}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
   m_Name: 

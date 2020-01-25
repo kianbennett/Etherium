@@ -7,11 +7,11 @@ public enum ResourceType { Gem, Mineral }
 public class ResourceObject : WorldObject {
 
     public ResourceType type;
-    public float resourceAmount; // 0 to 1
     public GameObject[] models; // First model is empty, last is full
+    [ReadOnly] public float resourceAmount; // 0 to 1
 
     [ReadOnly] public float lastHarvestTime;
-    [ReadOnly] public List<UnitHarvester> unitsHarvesting = new List<UnitHarvester>();
+    [HideInInspector] public List<UnitHarvester> unitsHarvesting = new List<UnitHarvester>();
 
     private float shakeTick;
     private const float shakeInterval = 0.05f, shakeDist = 0.05f;
@@ -86,6 +86,6 @@ public class ResourceObject : WorldObject {
     }
 
     void OnDestroy() {
-        Destroy(resourceBar.gameObject);
+        if(resourceBar) Destroy(resourceBar.gameObject);
     }
 }

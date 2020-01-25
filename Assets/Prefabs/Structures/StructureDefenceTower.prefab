@@ -355,6 +355,8 @@ MonoBehaviour:
   model: {fileID: 8438492439624702849}
   healthCurrent: 0
   healthMax: 40
+  buildTime: 16
+  buildCost: 2000
   bulletPrefab: {fileID: 4994337320529654110, guid: 638435611ecfb7449b8a57c57eebba3d,
     type: 3}
   bulletSpawnPoint: {fileID: 8438492438848821645}

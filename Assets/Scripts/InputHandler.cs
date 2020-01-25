@@ -56,6 +56,8 @@ public class InputHandler : Singleton<InputHandler> {
             rightClickHeld = false;
             onRightClickRelease();
         }
+
+        if(Input.GetKeyDown(KeyCode.P)) GameManager.instance.TogglePaused();
     }
 
     private void handleKeys() {
@@ -99,7 +101,7 @@ public class InputHandler : Singleton<InputHandler> {
 
     private void onLeftClickRelease() {
         if (leftClickDelta.magnitude == 0) {
-            if(!PlayerController.instance.isPlacingBuilding) {
+            if(!PlayerController.instance.isPlacingStructure) {
                 PlayerController.instance.DeselectAll();
             }
             if (PlayerController.instance.objectHovered) {

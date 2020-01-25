@@ -9,13 +9,14 @@ public class PlayerController : Singleton<PlayerController> {
     public Material buildingGhostMaterial, buildingGhostMaterialSet;
 
     [HideInInspector] public List<WorldObject> selectedObjects;
+    [ReadOnly] public StructureBase playerBase;
     [ReadOnly] public WorldObject objectHovered;
-    [ReadOnly] public bool isPlacingBuilding;
+    [ReadOnly] public bool isPlacingStructure;
     [ReadOnly] public int minerals;
     [ReadOnly] public int gems;
 
     // Perhaps move this to UnitBuilder
-    private GameObject buildingGhostModel;
+    private GameObject structureGhostModel;
     private UnitBuilder unitToBuild;
     private Structure structureToBuild;
     private float structureRotation;
@@ -26,24 +27,27 @@ public class PlayerController : Singleton<PlayerController> {
 
     void Update() {
         // If selecting any units
-        if(selectedObjects.Where(o => o is Unit).Count() > 0 || isPlacingBuilding) {
+        if((selectedObjects.Where(o => o is Unit).Count() > 0 || isPlacingStructure) && !HUD.instance.IsMouseOverHUD()) {
             World.instance.surface.isChoosingTile = true;
         } else {
             World.instance.surface.isChoosingTile = false;
         }
 
-        if(isPlacingBuilding && buildingGhostModel != null) {
+        if(isPlacingStructure && structureGhostModel != null && !HUD.instance.IsMouseOverHUD()) {
             TileData tileHovered = World.instance.tileDataMap[World.instance.surface.tileHitCoords.x, World.instance.surface.tileHitCoords.y];
-            buildingGhostModel.transform.position = World.instance.GetTilePos(tileHovered);
-            buildingGhostModel.transform.rotation = Quaternion.Lerp(buildingGhostModel.transform.rotation, Quaternion.Euler(Vector3.up * structureRotation), Time.deltaTime * 20);
-            buildingGhostModel.SetActive(tileHovered.type == TileType.None || tileHovered.type == TileType.Ground);
+            structureGhostModel.transform.position = World.instance.GetTilePos(tileHovered);
+            structureGhostModel.transform.rotation = Quaternion.Lerp(structureGhostModel.transform.rotation, Quaternion.Euler(Vector3.up * structureRotation), Time.deltaTime * 20);
+            bool canBuild = tileHovered.type == TileType.None || tileHovered.type == TileType.Ground;
+            // if(structureToBuild is StructureBridge && tileHovered.type != TileType.None) canBuild = false;
+            structureGhostModel.SetActive(canBuild);
         }
 
-        if(Input.GetKeyDown(KeyCode.A)) Build(World.instance.structureDefenceTowerPrefab);
-        if(Input.GetKeyDown(KeyCode.S)) Build(World.instance.structureWallPrefab);
-        if(Input.GetKeyDown(KeyCode.D)) Build(World.instance.structureWallCornerPrefab);
+        // if(Input.GetKeyDown(KeyCode.A)) Build(World.instance.structureDefenceTowerPrefab);
+        // if(Input.GetKeyDown(KeyCode.S)) Build(World.instance.structureWallPrefab);
+        // if(Input.GetKeyDown(KeyCode.D)) Build(World.instance.structureWallCornerPrefab);
+        // if(Input.GetKeyDown(KeyCode.F)) Build(World.instance.structureBridgePrefab);
 
-        if(isPlacingBuilding) {
+        if(isPlacingStructure) {
             if(Input.GetKeyDown(KeyCode.Q)) structureRotation -= 90;
             if(Input.GetKeyDown(KeyCode.E)) structureRotation += 90;
         }
@@ -107,11 +111,11 @@ public class PlayerController : Singleton<PlayerController> {
     }
 
     public void StartBuildingPlacement(UnitBuilder unit, Structure structure) {
-        if(buildingGhostModel) Destroy(buildingGhostModel);
-        buildingGhostModel = Instantiate(structure.model);
+        if(structureGhostModel) Destroy(structureGhostModel);
+        structureGhostModel = Instantiate(structure.model);
         Vector2Int tileHovered = World.instance.surface.tileHitCoords;
-        buildingGhostModel.transform.position = World.instance.GetTilePos(tileHovered.x, tileHovered.y);
-        foreach(MeshRenderer renderer in buildingGhostModel.GetComponentsInChildren<MeshRenderer>()) {
+        structureGhostModel.transform.position = World.instance.GetTilePos(tileHovered.x, tileHovered.y);
+        foreach(MeshRenderer renderer in structureGhostModel.GetComponentsInChildren<MeshRenderer>()) {
             renderer.material = buildingGhostMaterial;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
@@ -119,28 +123,32 @@ public class PlayerController : Singleton<PlayerController> {
 
         unitToBuild = unit;
         structureToBuild = structure;
-        isPlacingBuilding = true;
+        isPlacingStructure = true;
         structureRotation = 0;
     }
 
     public void CancelBuildingPlacement() {
-        if(buildingGhostModel) Destroy(buildingGhostModel);
-        isPlacingBuilding = false;
+        if(structureGhostModel) Destroy(structureGhostModel);
+        isPlacingStructure = false;
     }
 
     public void LeftClickTile(TileData tile) {
-        if(isPlacingBuilding) {
-            isPlacingBuilding = false;
-            foreach(MeshRenderer renderer in buildingGhostModel.GetComponentsInChildren<MeshRenderer>()) {
+        if(isPlacingStructure) {
+            if(structureToBuild is StructureBridge && tile.type != TileType.None) {
+                CancelBuildingPlacement();
+                return;
+            }
+            isPlacingStructure = false;
+            foreach(MeshRenderer renderer in structureGhostModel.GetComponentsInChildren<MeshRenderer>()) {
                 renderer.material = buildingGhostMaterialSet;
             }
-            unitToBuild.Build(structureToBuild, tile, buildingGhostModel, structureRotation);
-            buildingGhostModel = null;
+            unitToBuild.Build(structureToBuild, tile, structureGhostModel, structureRotation);
+            structureGhostModel = null;
         }
     }
 
     public void RightClickTile(TileData tile) {
-        if(isPlacingBuilding) {
+        if(isPlacingStructure) {
             CancelBuildingPlacement();
         } else {
             MoveUnits(tile, true);

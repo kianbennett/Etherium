@@ -8,6 +8,7 @@ public class Structure : WorldObject {
     
     [ReadOnly] public int healthCurrent;
     public int healthMax;
+    public int buildTime, buildCost;
 
     private Healthbar healthbar;
 
@@ -21,17 +22,25 @@ public class Structure : WorldObject {
 
     protected override void Update() {
         base.Update();
-        updateHealthbar();
+        if(healthbar) updateHealthbar();
+    }
+
+    public override void OnLeftClick() {
+        base.OnLeftClick();
+        
+        PlayerController.instance.SelectObject(this);
     }
 
     private void updateHealthbar() {
-        bool show = healthbar.isOnScreen() && (IsHovered() || IsSelected());
-        healthbar.SetWorldPos(transform.position + Vector3.up * 1.5f);
+        bool show = healthbar.isOnScreen() && (IsHovered() || IsSelected()) && healthMax > 0;
         healthbar.gameObject.SetActive(show);
-        healthbar.SetPercentage((float) healthCurrent / healthMax);
+        if(show) {
+            healthbar.SetWorldPos(transform.position + Vector3.up * 1.5f);
+            healthbar.SetPercentage((float) healthCurrent / healthMax);
+        }
     }
 
     void OnDestroy() {
-        Destroy(healthbar.gameObject);
+        if(healthbar) Destroy(healthbar.gameObject);
     }
 }

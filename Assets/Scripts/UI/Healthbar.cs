@@ -9,7 +9,7 @@ public class Healthbar : MonoBehaviour {
     public Vector3 offset;
 
     public void SetPercentage(float value) {
-        if(value != 0) barContainer.localScale = new Vector3(value, 1, 1);
+        barContainer.localScale = new Vector3(value, 1, 1);
     }
 
     // public void SetPosition(Vector3 pos) {

@@ -45,7 +45,7 @@ public static class NoiseGenerator {
 					float sampleX = (x-halfWidth + octaveOffsets[i].x) / scale * frequency;
 					float sampleY = (y-halfHeight + octaveOffsets[i].y) / scale * frequency;
 
-					float perlinValue = Mathf.PerlinNoise (sampleX, sampleY) * 2 - 1;
+					float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
 					noiseHeight += perlinValue * amplitude;
 
 					amplitude *= persistance;
@@ -66,7 +66,7 @@ public static class NoiseGenerator {
 				if (normalizeMode == NormalizeMode.Local) {
 					noiseMap [x, y] = Mathf.InverseLerp (minLocalNoiseHeight, maxLocalNoiseHeight, noiseMap [x, y]);
 				} else {
-					float normalizedHeight = (noiseMap [x, y] + 1) / (maxPossibleHeight/0.9f);
+					float normalizedHeight = (noiseMap[x, y] + 1) / (maxPossibleHeight / 0.9f);
 					noiseMap [x, y] = Mathf.Clamp(normalizedHeight,0, int.MaxValue);
 				}
 			}

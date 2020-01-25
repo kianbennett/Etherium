@@ -88,8 +88,10 @@ public class WorldGenerator : MonoBehaviour {
                 }
             }
             // Temporarily add a base at the centre of each island
-            tileMap[island.origin.x + (int) ((float) island.size / 2), island.origin.y + (int) ((float) island.size / 2)].type = TileType.Base;
+            // tileMap[island.origin.x + (int) ((float) island.size / 2), island.origin.y + (int) ((float) island.size / 2)].type = TileType.Base;
         }
+
+        tileMap[56, 46].type = TileType.Base;
 
         setUpConnections(tileMap);
 

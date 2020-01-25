@@ -28,6 +28,8 @@ public class UnitMovement : MonoBehaviour {
 
     void Awake() {
         decDist = decCurve.keys.Last().time;
+        lookDir = Vector3.back;
+        unit.model.rotation = Quaternion.LookRotation(lookDir);
     }
 
     void Update() {
@@ -60,7 +62,7 @@ public class UnitMovement : MonoBehaviour {
                 path.Remove(path.Last());
                 target = path.Last();
             }
-        } while(path.Count > 0 && path.Last().occupiedUnit != null && path.Last().occupiedUnit != unit);
+        } while(path.Count >= 2 && path.Last().occupiedUnit != null && path.Last().occupiedUnit != unit);
         
         target.occupiedUnit = unit;
         if(tileDestination != null) tileDestination.occupiedUnit = null;
@@ -71,7 +73,7 @@ public class UnitMovement : MonoBehaviour {
 
     public void SetPath(List<TileData> path) {
         // Put previous tile at the beginning of the path to avoid awkward movement when moving between tiles
-        if(pathNodes != null) {
+        if(pathNodes != null && pathNodes.Count > 0 && targetNode > 0) {
             path.Insert(0, pathNodes[targetNode - 1]);
         }
 
@@ -126,6 +128,7 @@ public class UnitMovement : MonoBehaviour {
 
     // Distance between unit and the most recent node passed 
     public float DistFromLastWaypoint(Vector3 position) {
+        // Debug.Log(pathNodes.Count + ", " + targetNode);
         if (targetNode > 0) {
             return Vector3.Distance(position, pathNodes[targetNode - 1].worldPos);
         } else {
@@ -151,6 +154,7 @@ public class UnitMovement : MonoBehaviour {
         if(pathNodes != null) {
             // pathNodes.RemoveRange(targetNode, pathNodes.Count() - targetNode - 1);
             pathNodes = new List<TileData>() { pathNodes[targetNode - 1], pathNodes[targetNode] };
+            targetNode = 1;
             SetPath(pathNodes);
         }
     }

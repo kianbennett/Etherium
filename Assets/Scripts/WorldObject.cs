@@ -31,7 +31,7 @@ public class WorldObject : MonoBehaviour {
     }
 
     void OnMouseEnter() {
-        SetHovered(true);
+        if(!HUD.instance.IsMouseOverHUD()) SetHovered(true);
     }
 
     void OnMouseExit() {

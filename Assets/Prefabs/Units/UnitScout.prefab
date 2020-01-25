@@ -596,8 +596,11 @@ MonoBehaviour:
   actionHandler: {fileID: 3948775877166513605}
   movement: {fileID: 5858159252581679628}
   model: {fileID: 6247324867802562627}
-  healthMax: 5
+  dustParticles: {fileID: 0}
   healthCurrent: 0
+  healthMax: 5
+  buildTime: 5
+  buildCost: 10
 --- !u!114 &7891265127179910948
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -605,7 +608,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4531244864017370835}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
   m_Name: 
@@ -705,6 +708,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   isFlying: 1
+  moveDir: {x: 0, y: 0, z: 0}
   lookDir: {x: 0, y: 0, z: 0}
   canMove: 1
   hasReachedDestination: 0

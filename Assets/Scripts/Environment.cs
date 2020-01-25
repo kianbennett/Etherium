@@ -241,7 +241,7 @@ public class Environment : MonoBehaviour
                         currentNode = mToBeTested[0];
                         currentNode.Visited = true;
 
-                        // Check each neighbour, if it is accessible and hasn't already been 
+                        // Check each neighbour, if it is accessible and hasn't already been
                         // processed then add it to the list to be tested 
                         for (int count = 0; count < currentNode.Connections.Count; ++count)
                         {

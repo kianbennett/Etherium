@@ -289,6 +289,8 @@ MonoBehaviour:
   model: {fileID: 9017910970048766360}
   healthCurrent: 0
   healthMax: 40
+  buildTime: 10
+  buildCost: 1200
 --- !u!114 &8438492440338747974
 MonoBehaviour:
   m_ObjectHideFlags: 0

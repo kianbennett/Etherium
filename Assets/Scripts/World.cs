@@ -17,7 +17,7 @@ public class World : Singleton<World> {
     public WorldObject minePrefab;
     public WorldObject mineralPrefab;
     public Unit unitarvesterPrefab, unitScoutPrefab, unitFighterPrefab, unitBuilderPrefab;
-    public Structure structureDefenceTowerPrefab, structureWallPrefab, structureWallCornerPrefab;
+    public Structure structureDefenceTowerPrefab, structureWallPrefab, structureWallCornerPrefab, structureBridgePrefab;
 
     [HideInInspector] public TileData[,] tileDataMap;
     [HideInInspector] public TileObject[,] tileObjectMap;
@@ -63,6 +63,8 @@ public class World : Singleton<World> {
                 switch(tileDataMap[i, j].type) {
                     case TileType.Base:
                         worldObject = Instantiate(basePrefab.gameObject, Vector3.zero, Quaternion.identity).GetComponent<WorldObject>();
+                        // TODO: This is temporary
+                        PlayerController.instance.playerBase = (StructureBase) worldObject;
                         break;
                     case TileType.Mine:
                         worldObject = Instantiate(minePrefab.gameObject, Vector3.zero, Quaternion.identity).GetComponent<WorldObject>();
@@ -85,6 +87,7 @@ public class World : Singleton<World> {
         // unit.movement.lookDir = Vector3.up * 180;
         // unit.model.transform.rotation = Quaternion.Euler(unit.movement.lookDir);
         unit.tile = tileDataMap[i, j];
+        unit.tile.occupiedUnit = unit;
 
         units.Add(unit);
     }

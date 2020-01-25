@@ -12,8 +12,10 @@ public class Unit : WorldObject {
     public Transform model;
     public ParticleSystem dustParticles;
 
-    public float healthMax;
     [ReadOnly] public float healthCurrent;
+    public float healthMax;
+    public int buildTime;
+    public int buildCost;
 
     private Healthbar healthbar;
 
@@ -115,6 +117,6 @@ public class Unit : WorldObject {
         if(World.instance) {
             World.instance.units.Remove(this);
         }
-        Destroy(healthbar.gameObject);
+        if(healthbar) Destroy(healthbar.gameObject);
     }
 }

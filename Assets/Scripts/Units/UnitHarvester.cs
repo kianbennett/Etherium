@@ -26,27 +26,42 @@ public class UnitHarvester : Unit {
                 if(harvestAmount >= harvestAmountPerResource) {
                     harvestAmount = 0;
                     resourceToHarvest.Harvest(harvestAmountPerResource);
-                    if(resourceToHarvest.type == ResourceType.Gem) GameManager.instance.gems += 5;
-                    if(resourceToHarvest.type == ResourceType.Mineral) GameManager.instance.minerals += 20;
+                    if(resourceToHarvest.type == ResourceType.Gem) GameManager.instance.AddGems(5);
+                    if(resourceToHarvest.type == ResourceType.Mineral) GameManager.instance.AddMinerals(20);
+                    if(GameManager.instance.IsAtMaxResource(resourceToHarvest.type)) {
+                        cancelHarvesting();
+                        return;
+                    }
                 }
                 isHarvesting = true;
                 if(!resourceToHarvest.unitsHarvesting.Contains(this)) resourceToHarvest.unitsHarvesting.Add(this);
             } else if(isHarvesting) {
-                if(resourceToHarvest.unitsHarvesting.Contains(this)) resourceToHarvest.unitsHarvesting.Remove(this);
-                resourceToHarvest = null;
-                isHarvesting = false;
+                cancelHarvesting();
             }
         }
     }
 
     public void HarvestResource(ResourceObject resource) {
+        if(resource == resourceToHarvest || GameManager.instance.IsAtMaxResource(resource.type)) return;
+        cancelHarvesting();
+
         TileData[] freeTiles = resource.tile.connections.Where(o => (o.occupiedUnit == null || o.occupiedUnit == this) && o.IsTileAccessible(movement.isFlying)).ToArray();
         freeTiles = freeTiles.OrderBy(o => Vector3.Distance(o.worldPos, transform.position)).ToArray();
 
         if(freeTiles.Length > 0) {
             MoveToPoint(freeTiles[0]);
+            resourceToHarvest = resource;
         }
+    }
 
-        resourceToHarvest = resource;
+    public override void MoveToPoint(TileData tile) {
+        base.MoveToPoint(tile);
+        cancelHarvesting();
+    }
+
+    private void cancelHarvesting() {
+        if(resourceToHarvest && resourceToHarvest.unitsHarvesting.Contains(this)) resourceToHarvest.unitsHarvesting.Remove(this);
+        resourceToHarvest = null;
+        isHarvesting = false;
     }
 }

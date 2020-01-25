@@ -132,4 +132,10 @@ public class CameraController : Singleton<CameraController> {
         profile.TryGetSettings(out Vignette vignette);
         vignette.enabled.value = enabled;
     }
+
+    public void SetBlurEnabled(bool enabled) {
+        PostProcessProfile profile = postProcessVolume.profile;
+        profile.TryGetSettings(out DepthOfField dof);
+        dof.enabled.value = enabled;
+    }
 }
