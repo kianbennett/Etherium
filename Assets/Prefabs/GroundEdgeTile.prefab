@@ -122,6 +122,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 330e35be024cb45429e1b3a73b131323, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  groundMaterial: {fileID: 2100000, guid: f90dc29195dba824bae1259286e9db4a, type: 2}
+  groundMaterialDark: {fileID: 2100000, guid: 6b138125665296c40b463261467f4838, type: 2}
+  groundRenderer: {fileID: 4788144722985988601}
 --- !u!1 &5582031311410960617
 GameObject:
   m_ObjectHideFlags: 0

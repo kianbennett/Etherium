@@ -41,6 +41,7 @@ public class ObjectUIRenderer : MonoBehaviour {
     }
 
     public void AddObject(GameObject gameObject, RawImage image) {
+        gameObject.SetActive(true);
         gameObject.transform.SetParent(container);
         images.Add(gameObject, image);
         UpdateCamera();

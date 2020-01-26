@@ -8,11 +8,23 @@ public class UnitHarvester : Unit {
     // Each frame the unit is harvesting harvestAmount increases
     // When this reaches harvestAmountPerResource resources are gained
     [ReadOnly] public float harvestAmount;
-    private const float harvestAmountPerResource = 0.1f;
-    private const float harvestSpeed = 0.25f;
+    [HideInInspector] public ResourceObject resourceToHarvest;
 
-    private ResourceObject resourceToHarvest;
     private bool isHarvesting;
+
+    private const float harvestAmountPerResource = 0.1f;
+    private const float harvestSpeed = 0.05f;
+
+    protected override void Awake() {
+        base.Awake();
+    }
+
+    protected override void Start() {
+        base.Start();
+        if(ownerId == 1) {
+            EnemyController.instance.harvesterUnits.Add(this);
+        }
+    }
 
     protected override void Update() {
         base.Update();
@@ -26,9 +38,19 @@ public class UnitHarvester : Unit {
                 if(harvestAmount >= harvestAmountPerResource) {
                     harvestAmount = 0;
                     resourceToHarvest.Harvest(harvestAmountPerResource);
-                    if(resourceToHarvest.type == ResourceType.Gem) GameManager.instance.AddGems(5);
-                    if(resourceToHarvest.type == ResourceType.Mineral) GameManager.instance.AddMinerals(20);
-                    if(GameManager.instance.IsAtMaxResource(resourceToHarvest.type)) {
+                    if(resourceToHarvest.type == ResourceType.Gem) {
+                        if(ownerId == 0) PlayerController.instance.AddGems(5);
+                        if(ownerId == 1) EnemyController.instance.AddGems(5);
+                    }
+                    if(resourceToHarvest.type == ResourceType.Mineral) {
+                        if(ownerId == 0) PlayerController.instance.AddMinerals(20);
+                        if(ownerId == 1) EnemyController.instance.AddMinerals(20);
+                    }
+                    if((ownerId == 0 && PlayerController.instance.IsAtMaxResource(resourceToHarvest.type))) {
+                        cancelHarvesting();
+                        return;
+                    }
+                    if(ownerId == 1 && EnemyController.instance.IsAtMaxResource(resourceToHarvest.type)) {
                         cancelHarvesting();
                         return;
                     }
@@ -42,7 +64,7 @@ public class UnitHarvester : Unit {
     }
 
     public void HarvestResource(ResourceObject resource) {
-        if(resource == resourceToHarvest || GameManager.instance.IsAtMaxResource(resource.type)) return;
+        if(resource == resourceToHarvest || PlayerController.instance.IsAtMaxResource(resource.type)) return;
         cancelHarvesting();
 
         TileData[] freeTiles = resource.tile.connections.Where(o => (o.occupiedUnit == null || o.occupiedUnit == this) && o.IsTileAccessible(movement.isFlying)).ToArray();
@@ -63,5 +85,12 @@ public class UnitHarvester : Unit {
         if(resourceToHarvest && resourceToHarvest.unitsHarvesting.Contains(this)) resourceToHarvest.unitsHarvesting.Remove(this);
         resourceToHarvest = null;
         isHarvesting = false;
+    }
+
+    protected override void OnDestroy() {
+        base.OnDestroy();
+        if(ownerId == 1 & !GameManager.quitting) {
+            EnemyController.instance.harvesterUnits.Remove(this);
+        }
     }
 }

@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class Structure : WorldObject {
 
-    public GameObject model;
-    
     [ReadOnly] public int healthCurrent;
     public int healthMax;
     public int buildTime, buildCost;
@@ -18,6 +16,10 @@ public class Structure : WorldObject {
         healthCurrent = healthMax;
 
         healthbar = HUD.instance.CreateHealthbar();
+
+        if(ownerId == 0) {
+            PlayerController.instance.ownedStructures.Add(this);
+        }
     }
 
     protected override void Update() {
@@ -41,16 +43,20 @@ public class Structure : WorldObject {
     }
 
     private void updateHealthbar() {
-        bool show = healthbar.isOnScreen() && (IsHovered() || IsSelected()) && healthMax > 0;
+        bool show = healthbar.isOnScreen() && (IsHovered() || IsSelected()) && isVisible && healthMax > 0;
         healthbar.gameObject.SetActive(show);
+        healthbar.SetWorldPos(transform.position + Vector3.up * 1.5f);
         if(show) {
-            healthbar.SetWorldPos(transform.position + Vector3.up * 1.5f);
             healthbar.SetPercentage((float) healthCurrent / healthMax);
         }
     }
 
     public int GetRepairCost() {
         return (healthMax - healthCurrent) * 4;
+    }
+
+    public void Repair() {
+        healthCurrent = healthMax;
     }
 
     public void Damage(int damage) {
@@ -60,7 +66,11 @@ public class Structure : WorldObject {
         }
     }
 
-    protected virtual void OnDestroy() {
+    protected override void OnDestroy() {
+        base.OnDestroy();
         if(healthbar) Destroy(healthbar.gameObject);
+        if(ownerId == 0 && !GameManager.quitting) {
+            PlayerController.instance.ownedStructures.Remove(this);
+        }
     }
 }

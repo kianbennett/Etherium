@@ -58,24 +58,10 @@ public class InputHandler : Singleton<InputHandler> {
         }
 
         if(Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape)) GameManager.instance.TogglePaused();
+        if(Input.GetKeyDown(KeyCode.F4)) GameManager.instance.ToggleSpedUp();
     }
 
     private void handleKeys() {
-        // TODO: put these character actions into some central character manager
-        // if (Input.GetKeyDown(KeyCode.S)) {
-        //     foreach (Character character in PlayerController.instance.SelectedCharacters) {
-        //         if (!character.movement.isSitting && character.actionHandler.ClearActions()) {
-        //             character.movement.StopMoving();
-        //         }
-        //     }
-        // }
-
-        // if (Input.GetKeyDown(KeyCode.LeftShift)) {
-        //     foreach (Character character in PlayerController.instance.SelectedCharacters) {
-        //         character.movement.isRunning = !character.movement.isRunning;
-        //     }
-        // }
-
         if (Input.GetKey(KeyCode.LeftArrow)) CameraController.instance.PanLeft();
         if (Input.GetKey(KeyCode.RightArrow)) CameraController.instance.PanRight();
         if (Input.GetKey(KeyCode.UpArrow)) CameraController.instance.PanForward();
@@ -104,7 +90,7 @@ public class InputHandler : Singleton<InputHandler> {
             if(!PlayerController.instance.isPlacingStructure) {
                 PlayerController.instance.DeselectAll();
             }
-            if (PlayerController.instance.objectHovered) {
+            if (PlayerController.instance.objectHovered && PlayerController.instance.objectHovered.ownerId != 1) {
                 PlayerController.instance.objectHovered.OnLeftClick();
             } else {
                 // bool hit = World.instance.surface.GetMousedOverCoordinates(out Vector3 hitPoint, out Vector2Int hitCoords);
@@ -134,7 +120,7 @@ public class InputHandler : Singleton<InputHandler> {
         CameraController.instance.Release();
 
         if (rightClickDelta.magnitude < minDistForDrag) {
-            if (PlayerController.instance.objectHovered) {
+            if (PlayerController.instance.objectHovered && PlayerController.instance.objectHovered.ownerId != 1) {
                 PlayerController.instance.objectHovered.OnRightClick();
             } else {
                 // bool hit = World.instance.surface.GetMousedOverCoordinates(out Vector3 hitPoint, out Vector2Int hitCoords);

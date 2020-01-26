@@ -29,22 +29,24 @@ public class StructureBase : Structure {
             buildTick = 0;
         }
         updateProgressBar();
-
-        // if(Input.GetKeyDown(KeyCode.Alpha1)) AddUnitToQueue(World.instance.unitarvesterPrefab);
-        // if(Input.GetKeyDown(KeyCode.Alpha2)) AddUnitToQueue(World.instance.unitFighterPrefab);
-        // if(Input.GetKeyDown(KeyCode.Alpha3)) AddUnitToQueue(World.instance.unitScoutPrefab);
-        // if(Input.GetKeyDown(KeyCode.Alpha4)) AddUnitToQueue(World.instance.unitBuilderPrefab);
     }
 
     public void AddUnitToQueue(Unit unit) {
-        unitBuildQueue.Add(unit);
+        if(ownerId == 0) {
+            if(PlayerController.instance.gems >= unit.buildCost) {
+                unitBuildQueue.Add(unit);
+                PlayerController.instance.AddGems(-unit.buildCost);
+            }
+        } else {
+            if(EnemyController.instance.gems >= unit.buildCost) {
+                unitBuildQueue.Add(unit);
+                EnemyController.instance.AddGems(-unit.buildCost);
+            }
+        }
     }
 
     private void spawnUnit(Unit unit) {
-        Unit spawnedUnit = Instantiate(unit, transform.position, Quaternion.identity);
-        spawnedUnit.tile = tile;
-        spawnedUnit.tile.occupiedUnit = spawnedUnit;
-        World.instance.units.Add(spawnedUnit);
+        Unit spawnedUnit = World.instance.SpawnUnit(unit, ownerId, tile.i, tile.j);
 
         // Start with tile directly outside the entrance
         TileData startingTile = World.instance.tileDataMap[tile.i, tile.j - 1];
@@ -94,9 +96,9 @@ public class StructureBase : Structure {
 
     private void updateProgressBar() {
         bool show = progressBar.isOnScreen() && unitBuildQueue.Count > 0;
+        progressBar.gameObject.SetActive(show);
+        progressBar.SetWorldPos(transform.position + Vector3.up * 1.5f);
         if(show) {
-            progressBar.SetWorldPos(transform.position + Vector3.up * 1.5f);
-            progressBar.gameObject.SetActive(show);
             progressBar.SetPercentage(buildTick / unitBuildQueue[0].buildTime);
         }
     }
@@ -104,5 +106,17 @@ public class StructureBase : Structure {
     protected override void OnDestroy() {
         base.OnDestroy();
         if(progressBar) Destroy(progressBar.gameObject);
+
+        if(!GameManager.quitting) {
+            if(ownerId == 0) {
+            GameManager.instance.Defeat();
+            } else {
+                GameManager.instance.Victory();
+            }
+        }
+    }
+
+    // Make base always visible to let players see where the enemy's base is
+    public override void SetVisible(bool visible) {
     }
 }

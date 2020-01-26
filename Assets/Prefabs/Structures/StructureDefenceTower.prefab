@@ -353,6 +353,12 @@ MonoBehaviour:
   outlineColourHovered: {r: 0.6792453, g: 0.6792453, b: 0.6792453, a: 1}
   outlineColourSelected: {r: 0.84085375, g: 1, b: 0.7028302, a: 1}
   model: {fileID: 8438492439624702849}
+  collider: {fileID: 8438492440338747977}
+  playerColourRenderers:
+  - {fileID: 8438492440617751918}
+  - {fileID: 8438492440491254303}
+  isVisible: 0
+  ownerId: 0
   healthCurrent: 0
   healthMax: 40
   buildTime: 16

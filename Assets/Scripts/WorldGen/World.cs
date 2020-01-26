@@ -9,6 +9,7 @@ public class World : Singleton<World> {
     public WorldGenerator generator;
     public Pathfinder pathfinder;
     public WorldSurface surface;
+    public FogOfWar fogOfWar;
     public Transform unitContainer;
 
     public TileObject tilePrefab;
@@ -16,24 +17,20 @@ public class World : Singleton<World> {
     public WorldObject basePrefab;
     public WorldObject minePrefab;
     public WorldObject mineralPrefab;
-    public Unit unitHarvesterPrefab;
-    // public Unit unitHarvesterPrefab, unitScoutPrefab, unitFighterPrefab, unitBuilderPrefab;
-    // public Structure structureDefenceTowerPrefab, structureWallPrefab, structureWallCornerPrefab, structureBridgePrefab, structureWarehousePrefab;
+    public WorldObject[] rockPrefabs;
+    public Unit unitHarvesterPrefab, unitScoutPrefab, unitFighterPrefab, unitBuilderPrefab;
+    public Structure structureDefenceTowerPrefab, structureWallPrefab, structureWallCornerPrefab, structureBridgePrefab, structureWarehousePrefab;
 
     [HideInInspector] public TileData[,] tileDataMap;
     [HideInInspector] public TileObject[,] tileObjectMap;
     [HideInInspector] public List<TileObject> allTiles = new List<TileObject>();
     [HideInInspector] public List<Unit> units = new List<Unit>();
 
+    // Put resource objects in a list to conventiently access from from EnemyController without having to search
+    [HideInInspector] public List<ResourceObject> resourceObjects;
+
     protected override void Awake() {
         Build();
-        Debug.Log(PlayerController.instance.playerBase.tile.pos);
-        SpawnUnit(unitHarvesterPrefab, PlayerController.instance.playerBase.tile.i, PlayerController.instance.playerBase.tile.j - 1);
-        CameraController.instance.SetAbsolutePosition(PlayerController.instance.playerBase.transform.position);
-        // SpawnUnit(unitScoutPrefab, 57, 54);
-        // SpawnUnit(unitFighterPrefab, 55, 52);
-        // SpawnUnit(unitFighterPrefab, 56, 52);
-        // SpawnUnit(unitBuilderPrefab, 59, 48);
     }
 
     public void Build() {
@@ -42,6 +39,7 @@ public class World : Singleton<World> {
         clear();
 
         tileObjectMap = new TileObject[generator.worldSize, generator.worldSize];
+        resourceObjects = new List<ResourceObject>();
 
         // Spawn tile objects
 		for (int j = 0; j < generator.worldSize; j++) {
@@ -64,35 +62,77 @@ public class World : Singleton<World> {
 
                 switch(tileDataMap[i, j].type) {
                     case TileType.Base:
-                        worldObject = Instantiate(basePrefab.gameObject, Vector3.zero, Quaternion.identity).GetComponent<WorldObject>();
-                        // TODO: This is temporary
-                        PlayerController.instance.playerBase = (StructureBase) worldObject;
+                        worldObject = Instantiate(basePrefab);
+                        if(tileDataMap[i, j].island == 0) {
+                            PlayerController.instance.playerBase = (StructureBase) worldObject;
+                            worldObject.ownerId = 0;
+                        } else {
+                            EnemyController.instance.enemyBase = (StructureBase) worldObject;
+                            worldObject.ownerId = 1;
+                        }
                         break;
                     case TileType.Mine:
-                        worldObject = Instantiate(minePrefab.gameObject, Vector3.zero, Quaternion.identity).GetComponent<WorldObject>();
+                        worldObject = Instantiate(minePrefab);
+                        resourceObjects.Add((ResourceObject) worldObject);
                         break;
                     case TileType.Mineral:
-                        worldObject = Instantiate(mineralPrefab.gameObject, Vector3.zero, Quaternion.identity).GetComponent<WorldObject>();
+                        worldObject = Instantiate(mineralPrefab);
+                        resourceObjects.Add((ResourceObject) worldObject);
+                        break;
+                    case TileType.Rock:
+                        worldObject = Instantiate(rockPrefabs[Random.Range(0, rockPrefabs.Length)]);
+                        worldObject.transform.rotation = Quaternion.Euler(Vector3.up * Random.Range(0.0f, 360.0f));
                         break;
                 }
 
                 if(worldObject != null) {
                     worldObject.transform.SetParent(tile.transform, false);
                     worldObject.tile = tile.tileData;
-                    // if(worldObject is StructureBase) Debug.Log("BASE: " + tile.tileData.pos);
+                    worldObject.tile.occupiedObject = worldObject;
+                }
+
+                if(tileDataMap[i, j].spawnEnemyFighter) {
+                    SpawnUnit(unitFighterPrefab, 1, i, j);            
+                }
+                if(tileDataMap[i, j].spawnEnemyTower) {
+                    SpawnStructure(structureDefenceTowerPrefab, 1, i, j);
                 }
 			}
 		}
+
+        // Start each player with a single harvester unit
+        SpawnUnit(unitHarvesterPrefab, 0, PlayerController.instance.playerBase.tile.i, PlayerController.instance.playerBase.tile.j - 1);
+        // SpawnUnit(unitHarvesterPrefab, 1, EnemyController.instance.enemyBase.tile.i, EnemyController.instance.enemyBase.tile.j - 1);
+        // Focus the camera on the player's base
+        CameraController.instance.SetAbsolutePosition(PlayerController.instance.playerBase.transform.position);
     }
 
-    public void SpawnUnit(Unit prefab, int i, int j) {
+    public Unit SpawnUnit(Unit prefab, int ownerId, int i, int j) {
         Unit unit = Instantiate(prefab.gameObject, GetTilePos(i, j), Quaternion.identity, unitContainer).GetComponent<Unit>();
-        // unit.movement.lookDir = Vector3.up * 180;
-        // unit.model.transform.rotation = Quaternion.Euler(unit.movement.lookDir);
         unit.tile = tileDataMap[i, j];
         unit.tile.occupiedUnit = unit;
+        unit.ownerId = ownerId;
 
         units.Add(unit);
+
+        fogOfWar.UpdateFogOfWar();
+
+        return unit;
+    }
+
+    public Structure SpawnStructure(Structure prefab, int ownerId, int i, int j) {
+        Structure structure = Instantiate(prefab, GetTilePos(i, j), Quaternion.identity);
+        structure.tile = tileDataMap[i, j];
+        structure.tile.type = TileType.Structure;
+        structure.ownerId = ownerId;
+        if(structure is StructureBridge) {
+            structure.tile.type = TileType.Ground;
+            World.instance.tileObjectMap[i, j] = structure.GetComponent<TileObjectBridge>();
+        } else {
+            structure.tile.occupiedObject = structure;
+        }
+        fogOfWar.UpdateFogOfWar();
+        return structure;
     }
 
     public Vector3 GetTilePos(int i, int j) {
@@ -108,6 +148,10 @@ public class World : Singleton<World> {
             return tileObjectMap[i, j];
         }
         return null;
+    }
+
+    public TileObject GetTileObjectAt(TileData tileData) {
+        return GetTileObjectAt(tileData.i, tileData.j);
     }
 
     private void clear() {

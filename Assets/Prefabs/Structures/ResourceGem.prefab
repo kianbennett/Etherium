@@ -699,12 +699,14 @@ MonoBehaviour:
   scaleOnHover: 1
   outlineColourHovered: {r: 0.6792453, g: 0.6792453, b: 0.6792453, a: 1}
   outlineColourSelected: {r: 0.84085375, g: 1, b: 0.7028302, a: 1}
+  isVisible: 0
   type: 0
-  resourceAmount: 0
   models:
   - {fileID: 3048756288433543726}
   - {fileID: 761474619017011606}
   - {fileID: 1323735842450304494}
+  collider: {fileID: 6741304030141451273}
+  resourceAmount: 0
   lastHarvestTime: 0
   unitsHarvesting: []
 --- !u!65 &6741304030141451273

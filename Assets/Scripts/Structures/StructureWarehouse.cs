@@ -6,14 +6,28 @@ public class StructureWarehouse : Structure {
 
     protected override void Awake() {
         base.Awake();
-        GameManager.instance.warehouses++;
+    }
+
+    protected override void Start() {
+        if(ownerId == 0) {
+            PlayerController.instance.warehouses++;
+        } else {
+            EnemyController.instance.warehouses++;
+        }
     }
 
     protected override void OnDestroy() {
         base.OnDestroy();
-        GameManager.instance.warehouses--;
-        // Use these to clamp the values to the new max
-        GameManager.instance.AddGems(0);
-        GameManager.instance.AddMinerals(0);
+        if(!GameManager.quitting) {
+            if(ownerId == 0) {
+                PlayerController.instance.warehouses--;
+                // Use these to clamp the values to the new max
+                PlayerController.instance.AddGems(0);
+                PlayerController.instance.AddMinerals(0);
+            } else {
+                EnemyController.instance.AddGems(0);
+                EnemyController.instance.AddMinerals(0);
+            }
+        }
     }
 }

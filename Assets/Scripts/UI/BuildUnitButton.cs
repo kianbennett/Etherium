@@ -30,7 +30,7 @@ public class BuildUnitButton : MonoBehaviour {
     }
 
     void Update() {
-        button.interactable = GameManager.instance.gems >= unitPrefab.buildCost;
+        button.interactable = PlayerController.instance.gems >= unitPrefab.buildCost;
         GameUtil.SetImageAlpha(background, button.interactable ? 1 : 0.6f);
     }
 
@@ -39,10 +39,7 @@ public class BuildUnitButton : MonoBehaviour {
     }
 
     public void OnClick() {
-        if(GameManager.instance.gems >= unitPrefab.buildCost) {
-            PlayerController.instance.playerBase.AddUnitToQueue(unitPrefab);
-            GameManager.instance.AddGems(-unitPrefab.buildCost);
-        }
+        PlayerController.instance.playerBase.AddUnitToQueue(unitPrefab);
     }
 
     // public void OnPointerEnter(PointerEventData eventData) {

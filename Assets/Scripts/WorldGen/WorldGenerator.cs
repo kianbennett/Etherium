@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public enum TileType { None, Ground, Mine, Mineral, Base, Structure };
+public enum TileType { None, Ground, Mine, Mineral, Base, Structure, Rock };
 
 public class Island {
     public Vector2Int origin;
     public int size;
     public TileData[] tiles;
+    public int index;
 
-    public Vector2Int centre { get { return new Vector2Int((int) ((float) size / 2), (int) ((float) size / 2)); } }
+    public Vector2Int centre { get { return origin + new Vector2Int((int) ((float) size / 2), (int) ((float) size / 2)); } }
 
     // public void setTileType(int i, int j, TileType type) {
     //     TileData[] results = tiles.Where(o => o.i == i && o.j == j).ToArray();
@@ -25,10 +26,15 @@ public class TileData {
     public TileType type;
     public int island;
     public Unit occupiedUnit;
-    public Structure occupiedStructure;
+    // public Structure occupiedStructure;
+    public WorldObject occupiedObject;
+    public bool lit; // Is within player view, i.e. not in fog of war
 
     public Vector2Int pos { get { return new Vector2Int(i, j); } }
     public Vector3 worldPos { get { return World.instance.GetTilePos(this); } }
+    public TileObject tileObject { get { return World.instance.GetTileObjectAt(this); } }
+
+    public bool spawnEnemyFighter, spawnEnemyTower;
 
     // Pathfinding data
     public List<TileData> connections;
@@ -79,43 +85,64 @@ public class WorldGenerator : MonoBehaviour {
         // Create islands
         List<Island> islands = new List<Island>();
 
-        Island playerIsland = generateIsland(new Vector2Int(0, 0), Random.Range(minIslandSize, maxIslandSize), 0);
+        Island playerIsland = generateIsland(new Vector2Int(0, 0), maxIslandSize, 0);
         populateIsland(playerIsland);
         islands.Add(playerIsland);
 
-        Island enemyIsland = generateIsland(new Vector2Int(worldSize - (int) (maxIslandSize / 2.0f), worldSize - (int) (maxIslandSize / 2.0f)), Random.Range(minIslandSize, maxIslandSize), 1);
+        Island enemyIsland = generateIsland(new Vector2Int(worldSize - maxIslandSize, worldSize - maxIslandSize), maxIslandSize, 1);
         populateIsland(enemyIsland);
         islands.Add(enemyIsland);
 
         for(int i = 0; i < islandCount; i++) {
             int size = Random.Range(minIslandSize, maxIslandSize);
             Vector2Int pos = getNextPointInArea(islands.Select(o => o.origin).ToArray(), size);
-            Island island = generateIsland(pos, size, i);
+            Island island = generateIsland(pos, size, 2 + i);
             populateIsland(island);
             islands.Add(island);
             // Temporarily add a base at the centre of each island
             // tileMap[island.origin.x + (int) ((float) island.size / 2), island.origin.y + (int) ((float) island.size / 2)].type = TileType.Base;
         }
 
-        foreach(Island island in islands) {
-            foreach(TileData tile in island.tiles) {
+        for(int i = 0; i < islands.Count; i++) {
+            foreach(TileData tile in islands[i].tiles) {
                 if(IsInBounds(tile.i, tile.j)) {
                     tileMap[tile.i, tile.j] = tile;
+                    // tile.island = i;
                 }
             }
         }
 
-        // Clear out area around base
+        // Clear out area around base to ensure there are no resources blocking the exit
         int clearRadius = 3;
         for(int i = 0; i < clearRadius * 2; i++) {
             for(int j = 0; j < clearRadius * 2; j++) {
-                if(Vector2.Distance(new Vector2(i, j), new Vector2(clearRadius, clearRadius)) <= clearRadius) {
-                    tileMap[playerIsland.centre.x + i, playerIsland.centre.y].type = TileType.Ground;
+                int x = playerIsland.centre.x + i - clearRadius;
+                int y = playerIsland.centre.y + j - clearRadius;
+                if(IsInBounds(x, y)) {
+                    tileMap[x, y].type = TileType.Ground;
+                }
+            }   
+        }
+        for(int i = 0; i < clearRadius * 2; i++) {
+            for(int j = 0; j < clearRadius * 2; j++) {
+                int x = enemyIsland.centre.x + i - clearRadius;
+                int y = enemyIsland.centre.y + j - clearRadius;
+                if(IsInBounds(x, y)) {
+                    tileMap[x, y].type = TileType.Ground;
+                    // Stop fighters and towers spawing on/infront of the base
+                    tileMap[x, y].spawnEnemyFighter = false;
+                    tileMap[x, y].spawnEnemyTower = false;
                 }
             }   
         }
 
+        tileMap[enemyIsland.centre.x - 2, enemyIsland.centre.y + 2].spawnEnemyTower = true;
+        tileMap[enemyIsland.centre.x + 2, enemyIsland.centre.y - 2].spawnEnemyTower = true;
+
         tileMap[playerIsland.centre.x, playerIsland.centre.y].type = TileType.Base;
+        tileMap[enemyIsland.centre.x, enemyIsland.centre.y].type = TileType.Base;
+
+        
 
         setUpConnections(tileMap);
 
@@ -145,7 +172,8 @@ public class WorldGenerator : MonoBehaviour {
         Island island = new Island() {
             origin = origin,
             size = size,
-            tiles = tiles.ToArray()
+            tiles = tiles.ToArray(),
+            index = islandIndex
         };
         return island;
     }
@@ -181,11 +209,16 @@ public class WorldGenerator : MonoBehaviour {
     private void populateIsland(Island island) {
         // island.setTileType(island.origin.x + (int) ((float) island.size / 2), island.origin.y + (int) ((float) island.size / 2), TileType.Base);
 
-        int mines = Random.Range(3, 8);
-        int minerals = Random.Range(12, 30);
+        int mines = Random.Range(3, 6);
+        int minerals = Random.Range(island.size - 10, island.size);
+        int rocks = Random.Range(island.size / 4, island.size / 2);
+
+        if(minerals < 0) minerals = 0;
+        if(rocks < 0) rocks = 0;
 
         List<TileData> mineTiles = new List<TileData>();
         List<TileData> mineralTiles = new List<TileData>();
+        List<TileData> rockTiles = new List<TileData>();
         for(int i = 0; i < mines; i++) {
             TileData tile = null;
             // Make sure new tile hasn't already got a mine on it
@@ -200,10 +233,54 @@ public class WorldGenerator : MonoBehaviour {
             TileData tile = null;
             do {
                 tile = island.tiles[Random.Range(0, island.tiles.Length)];
-            } while(mineralTiles.Contains(tile));
+            } while(mineralTiles.Contains(tile) || mineTiles.Contains(tile));
 
             mineralTiles.Add(tile);
             tile.type = TileType.Mineral;
+        }
+        for(int i = 0; i < rocks; i++) {
+            TileData tile = null;
+            do {
+                tile = island.tiles[Random.Range(0, island.tiles.Length)];
+            } while(mineTiles.Contains(tile));
+
+            rockTiles.Add(tile);
+            tile.type = TileType.Rock;
+        }
+
+        // Don't spawn enemies on the player's island
+        if(island.index != 0) {
+            int enemies = Random.Range(1, 4);
+            int towers = Random.Range(0, 2);
+
+            // Put more fighters on the enemy's base island
+            if(island.index == 1) {
+                enemies = Random.Range(3, 6);
+            }
+
+            List<TileData> enemyTiles = new List<TileData>();
+            List<TileData> towerTiles = new List<TileData>();
+
+            for(int i = 0; i < enemies; i++) {
+                TileData tile = null;
+                do {
+                    tile = island.tiles[Random.Range(0, island.tiles.Length)];
+                } while(enemyTiles.Contains(tile) || mineTiles.Contains(tile));
+
+                enemyTiles.Add(tile);
+                tile.type = TileType.Ground;
+                tile.spawnEnemyFighter = true;
+            }
+            for(int i = 0; i < towers; i++) {
+                TileData tile = null;
+                do {
+                    tile = island.tiles[Random.Range(0, island.tiles.Length)];
+                } while(towerTiles.Contains(tile) || mineTiles.Contains(tile));
+
+                towerTiles.Add(tile);
+                tile.type = TileType.Ground;
+                tile.spawnEnemyTower = true;
+            }
         }
     }
 

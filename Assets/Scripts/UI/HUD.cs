@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class HUD : Singleton<HUD> {
 
@@ -14,7 +15,8 @@ public class HUD : Singleton<HUD> {
     public ObjectUIRenderer objectUIRenderer;
     public ScreenFader screenFader;
     public Transform healthbarContainer, unitIconContainer;
-    public GameObject pausedOverlay;
+    public GameObject pausedOverlay, victoryScreen, defeatScreen;
+    public TextMeshProUGUI textFinalTime;
     public Tooltip tooltip;
     
     public TextMeshProUGUI textGemsValue, textMineralsValue;
@@ -36,10 +38,10 @@ public class HUD : Singleton<HUD> {
     private Dictionary<Unit, UnitIcon> unitIcons = new Dictionary<Unit, UnitIcon>();
 
     void Update() {
-        textGemsValue.text = GameManager.instance.gems.ToString();
-        textMineralsValue.text = GameManager.instance.minerals.ToString();
-        textGemsMaxValue.text = "MAX: " + GameManager.instance.MaxGems.ToString();
-        textMineralsMaxValue.text = "MAX: " + GameManager.instance.MaxMinerals.ToString();
+        textGemsValue.text = PlayerController.instance.gems.ToString();
+        textMineralsValue.text = PlayerController.instance.minerals.ToString();
+        textGemsMaxValue.text = "MAX: " + PlayerController.instance.MaxGems.ToString();
+        textMineralsMaxValue.text = "MAX: " + PlayerController.instance.MaxMinerals.ToString();
 
         int minutes = (int) (GameManager.instance.timer / 60);
         int seconds = (int) GameManager.instance.timer % 60;
@@ -59,7 +61,7 @@ public class HUD : Singleton<HUD> {
         foreach(Unit unit in selectedUnits) {
             unitRepairCost += unit.GetRepairCost();
         }
-        unitRepairButton.interactable = unitRepairCost > 0 && GameManager.instance.gems >= unitRepairCost;
+        unitRepairButton.interactable = unitRepairCost > 0 && PlayerController.instance.gems >= unitRepairCost;
         textRepairUnitsCost.text = unitRepairCost.ToString();
         rectRepairUnitCost.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, textRepairUnitsCost.preferredWidth + 10);
 
@@ -67,7 +69,7 @@ public class HUD : Singleton<HUD> {
         foreach(Structure structure in selectedStructures) {
             structureRepairCost += structure.GetRepairCost();
         }
-        structureRepairButton.interactable = structureRepairCost > 0 && GameManager.instance.minerals >= structureRepairCost;
+        structureRepairButton.interactable = structureRepairCost > 0 && PlayerController.instance.minerals >= structureRepairCost;
         textRepairStructuresCost.text = structureRepairCost.ToString();
         rectRepairStructureCost.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, textRepairStructuresCost.preferredWidth + 10);
 
@@ -126,5 +128,27 @@ public class HUD : Singleton<HUD> {
 
     public void HideTooltip() {
         tooltip.gameObject.SetActive(false);
+    }
+
+    public void Resume() {
+        GameManager.instance.SetPaused(false);
+    }
+
+    public void Restart() {
+        GameManager.quitting = true;
+        screenFader.FadeOut(delegate {
+            SceneManager.LoadScene("GameScene");
+        }, 0.5f);
+        Time.timeScale = 1;
+        screenFader.CanvasGroup.blocksRaycasts = true;
+    }
+
+    public void Quit() {
+        GameManager.quitting = true;
+        screenFader.FadeOut(delegate {
+            SceneManager.LoadScene("MainMenu");
+        }, 0.5f);
+        Time.timeScale = 1;
+        screenFader.CanvasGroup.blocksRaycasts = true;
     }
 }

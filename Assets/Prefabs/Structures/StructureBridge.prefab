@@ -435,6 +435,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8438492440338747972}
   - component: {fileID: 120348061568225576}
+  - component: {fileID: 5505583461226876774}
   - component: {fileID: 8438492440338747974}
   - component: {fileID: 8438492440338747977}
   m_Layer: 0
@@ -477,10 +478,29 @@ MonoBehaviour:
   outlineColourHovered: {r: 0.6792453, g: 0.6792453, b: 0.6792453, a: 1}
   outlineColourSelected: {r: 0.84085375, g: 1, b: 0.7028302, a: 1}
   model: {fileID: 8438492439624702849}
+  collider: {fileID: 8438492440338747977}
+  isVisible: 0
   healthCurrent: 0
   healthMax: 40
   buildTime: 1
   buildCost: 50
+  ownerId: 0
+--- !u!114 &5505583461226876774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8438492440338747973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4976d4b6ac4cfcb489533e1dbce73e7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  groundMaterial: {fileID: 0}
+  groundMaterialDark: {fileID: 0}
+  groundRenderer: {fileID: 0}
+  model: {fileID: 8438492439624702849}
 --- !u!114 &8438492440338747974
 MonoBehaviour:
   m_ObjectHideFlags: 0

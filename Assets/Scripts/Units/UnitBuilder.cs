@@ -7,9 +7,9 @@ public class UnitBuilder : Unit {
 
     [ReadOnly] public float buildAmount; // percentage, 0 - 1
 
+    [HideInInspector] public Structure structureToBuild;
     private TileData targetTile;
     private bool isBuilding;
-    private Structure structureToBuild;
     private float structureRotation;
 
     private GameObject buildingGhostModel;
@@ -19,6 +19,13 @@ public class UnitBuilder : Unit {
         base.Awake();
 
         progressBar = HUD.instance.CreateProgressBar();
+    }
+
+    protected override void Start() {
+        base.Start();
+        if(ownerId == 1) {
+            EnemyController.instance.builderUnits.Add(this);
+        }
     }
 
     protected override void Update() {
@@ -33,11 +40,11 @@ public class UnitBuilder : Unit {
                 isBuilding = true;
 
                 // If the player has lost the required resources on the journey then cancel the build
-                if(GameManager.instance.minerals < structureToBuild.buildCost) {
+                if(GameManager.instance.GetResourceAmount(ownerId, ResourceType.Mineral) < structureToBuild.buildCost) {
                     cancelBuilding();
                 }
                 
-                if(buildAmount >= structureToBuild.buildTime) {
+                if(structureToBuild && buildAmount >= structureToBuild.buildTime) {
                     buildAmount = 0;
                     spawnStructure();
                     cancelBuilding();
@@ -56,7 +63,9 @@ public class UnitBuilder : Unit {
         structureToBuild = structure;
         structureRotation = rotation;
         buildingGhostModel = ghostModel;
-        buildingGhostModel.transform.rotation = Quaternion.Euler(Vector3.up * rotation);
+        if(buildingGhostModel != null) {
+            buildingGhostModel.transform.rotation = Quaternion.Euler(Vector3.up * rotation);
+        }
 
         List<TileData> path = World.instance.pathfinder.Solve(this.tile, tile, structure is StructureBridge);
 
@@ -78,17 +87,10 @@ public class UnitBuilder : Unit {
     }
 
     private void spawnStructure() {
-        if(structureToBuild != null && targetTile != null && GameManager.instance.minerals >= structureToBuild.buildCost) {
-            Structure structure = Instantiate(structureToBuild, targetTile.worldPos, Quaternion.identity);
+        if(structureToBuild != null && targetTile != null && PlayerController.instance.minerals >= structureToBuild.buildCost) {
+            Structure structure = World.instance.SpawnStructure(structureToBuild, ownerId, targetTile.i, targetTile.j);
             structure.transform.rotation = Quaternion.Euler(Vector3.up * structureRotation);
-            structure.tile = targetTile;
-            targetTile.type = TileType.Structure;
-            if(structure is StructureBridge) {
-                targetTile.type = TileType.Ground;
-            } else {
-                targetTile.occupiedStructure = structureToBuild;
-            }
-            GameManager.instance.AddMinerals(-structureToBuild.buildCost);
+            PlayerController.instance.AddMinerals(-structureToBuild.buildCost);
         }
     }
 
@@ -97,7 +99,7 @@ public class UnitBuilder : Unit {
         targetTile = null;
         structureToBuild = null;
         isBuilding = false;
-        Destroy(buildingGhostModel);
+        if(buildingGhostModel) Destroy(buildingGhostModel);
     }
 
     public void MoveAndKeepBuilding(TileData tile) {
@@ -112,8 +114,8 @@ public class UnitBuilder : Unit {
     private void updateProgressBar() {
         bool show = progressBar.isOnScreen() && isBuilding;
         progressBar.gameObject.SetActive(show);
+        if(targetTile != null) progressBar.SetWorldPos(targetTile.worldPos + Vector3.up * 1.5f);    
         if(show) {
-            progressBar.SetWorldPos(targetTile.worldPos + Vector3.up * 1.5f);    
             progressBar.SetPercentage(buildAmount / structureToBuild.buildTime);
         }
     }
@@ -123,6 +125,9 @@ public class UnitBuilder : Unit {
         if(progressBar) {
             cancelBuilding();
             Destroy(progressBar.gameObject);
+        }
+        if(ownerId == 1 && !GameManager.quitting) {
+            EnemyController.instance.builderUnits.Remove(this);
         }
     }
 }

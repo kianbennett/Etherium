@@ -29,7 +29,7 @@ public class BuildStructureButton : MonoBehaviour {
     }
 
     void Update() {
-        button.interactable = GameManager.instance.minerals >= structurePrefab.buildCost;
+        button.interactable = PlayerController.instance.minerals >= structurePrefab.buildCost;
         GameUtil.SetImageAlpha(background, button.interactable ? 1 : 0.6f);
     }
 

@@ -29,7 +29,7 @@ public abstract class Singleton<T> : MonoBehaviour where T : Singleton<T> {
                 DontDestroyOnLoad(gameObject);
             }
         } else if(_instance != this as T) {
-            Destroy(gameObject);
+            // Destroy(gameObject);
             return;
         }
     }

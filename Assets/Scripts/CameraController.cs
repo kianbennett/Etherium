@@ -36,15 +36,12 @@ public class CameraController : Singleton<CameraController> {
     }
 
     void Update() {
-        // TODO: move this to a central input manager
+        // TODO: move this to InputHandler
         isRotating = Input.GetMouseButton(2);
-        bool pivot = Input.GetKey(KeyCode.LeftShift);
 
         if(isRotating) {
             float rot = Input.GetAxis("Mouse X") * rotationSpeed;
-            // TODO: RotateAround not working
-            if (pivot) target.RotateAround(camera.transform.position, Vector3.up, rot);
-                else target.Rotate(Vector3.up, rot);
+            target.Rotate(Vector3.up, rot);
         }
 
         // Only zoom if the mouse isn't over a UI element to avoid zooming when scrolling
@@ -60,6 +57,8 @@ public class CameraController : Singleton<CameraController> {
 
     public void Move(Vector3 delta) {
         targetPosition += delta;
+        targetPosition.x = Mathf.Clamp(targetPosition.x, -World.instance.generator.worldSize / 2.0f, World.instance.generator.worldSize / 2.0f);
+        targetPosition.z = Mathf.Clamp(targetPosition.z, -World.instance.generator.worldSize / 2.0f, World.instance.generator.worldSize / 2.0f);
     }
 
     public void PanLeft() {
@@ -102,7 +101,6 @@ public class CameraController : Singleton<CameraController> {
 
     // Called when the mouse moves while grabbing
     public void Pan() {
-        // TODO: Disable panning during scene transition
         Ray ray = camera.ScreenPointToRay(Input.mousePosition);
         bool hit = Physics.Raycast(ray, out RaycastHit hitInfo, float.MaxValue, 1 << LayerMask.NameToLayer("Ground"));
         if (hit) {

@@ -624,7 +624,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4531244864017370832}
-  - component: {fileID: -4179618812004028311}
+  - component: {fileID: 7872818288266240222}
   - component: {fileID: 7891265127179910948}
   - component: {fileID: 5858159252581679628}
   - component: {fileID: 3948775877166513605}
@@ -653,7 +653,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &-4179618812004028311
+--- !u!114 &7872818288266240222
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -662,7 +662,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4531244864017370835}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 90617407b639aa644aaa39c55c11b9f4, type: 3}
+  m_Script: {fileID: 11500000, guid: 92aae1ef1669c684fb10bb825a2f417c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   outline: {fileID: 7891265127179910948}
@@ -670,16 +670,21 @@ MonoBehaviour:
   scaleOnHover: 0
   outlineColourHovered: {r: 0.6792453, g: 0.6792453, b: 0.6792453, a: 1}
   outlineColourSelected: {r: 0.84085375, g: 1, b: 0.7028302, a: 1}
+  model: {fileID: 1690280181647434214}
+  collider: {fileID: 1428929899972870368}
+  playerColourRenderers:
+  - {fileID: 4531244863760085549}
+  isVisible: 0
+  ownerId: -1
   pathLineRenderer: {fileID: 1240137658912527209}
   pathLineTriangle: {fileID: 2601248433080396251}
   actionHandler: {fileID: 3948775877166513605}
   movement: {fileID: 5858159252581679628}
-  model: {fileID: 6247324867802562627}
   dustParticles: {fileID: 0}
   healthCurrent: 0
   healthMax: 5
   buildTime: 5
-  buildCost: 10
+  buildCost: 50
 --- !u!114 &7891265127179910948
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -736,7 +741,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 632c69e8415d77747bd2cda636b09edf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  unit: {fileID: -4179618812004028311}
+  unit: {fileID: 7872818288266240222}
   moveSpeed: 3
   accCurve:
     serializedVersion: 2
@@ -814,8 +819,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.6291096, y: 0.45657718, z: 0.6895057}
-  m_Center: {x: 0, y: 0.19328862, z: 0.009560168}
+  m_Size: {x: 0.54, y: 0.79, z: 0.6}
+  m_Center: {x: 0, y: 0.37, z: -0.08}
 --- !u!1 &4790093408256671513
 GameObject:
   m_ObjectHideFlags: 0

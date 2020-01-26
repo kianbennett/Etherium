@@ -16,6 +16,13 @@ public class UnitFighter : Unit {
     private bool isInRange;    
     private bool isMovingToTarget;
 
+    protected override void Start() {
+        base.Start();
+        if(ownerId == 1) {
+            EnemyController.instance.fighterUnits.Add(this);
+        }
+    }
+
     protected override void Update() {
         base.Update();
 
@@ -43,6 +50,13 @@ public class UnitFighter : Unit {
             }
         } else {
             fireTick = 0;
+
+            foreach(Unit unit in World.instance.units) {
+                if(unit.ownerId != ownerId && Vector2Int.Distance(unit.tile.pos, tile.pos) <= range) {
+                    Attack(unit);
+                    break;
+                }
+            }
         }
     }
 
@@ -77,5 +91,12 @@ public class UnitFighter : Unit {
     public override void MoveToPoint(TileData tile) {
         base.MoveToPoint(tile);
         target = null;
+    }
+
+    protected override void OnDestroy() {
+        base.OnDestroy();
+        if(ownerId == 1 && !GameManager.quitting) {
+            EnemyController.instance.fighterUnits.Remove(this);
+        }
     }
 }

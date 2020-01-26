@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class Unit : WorldObject {
 
@@ -9,7 +10,6 @@ public class Unit : WorldObject {
     public Transform pathLineTriangle;
     public UnitActionHandler actionHandler;
     public UnitMovement movement;
-    public Transform model;
     public ParticleSystem dustParticles;
 
     [ReadOnly] public float healthCurrent;
@@ -26,14 +26,20 @@ public class Unit : WorldObject {
 
         healthbar = HUD.instance.CreateHealthbar();
         healthbar.rect.sizeDelta = new Vector2(Mathf.Clamp(healthMax * 8, 0, 80), healthbar.rect.sizeDelta.y);
+    }
 
-        HUD.instance.CreateUnitIcon(this);
+    protected override void Start() {
+        base.Start();
+        if(ownerId == 0) {
+            PlayerController.instance.ownedUnits.Add(this);
+            HUD.instance.CreateUnitIcon(this);
+        }
     }
 
     protected override void Update () {
         base.Update();
         // Set selected based on whether the unit is inside the HUD selection box
-        if(HUD.hasSelectionBox) {
+        if(HUD.hasSelectionBox && ownerId == 0) {
             if (!isSelected && isInSelectionBox()) {
                 PlayerController.instance.SelectObject(this);
             } else if(isSelected && !isInSelectionBox()) {
@@ -72,14 +78,16 @@ public class Unit : WorldObject {
 
     public override void OnLeftClick() {
         base.OnLeftClick();
-
-        PlayerController.instance.SelectObject(this);
+        if(ownerId == 0) {
+            PlayerController.instance.SelectObject(this);
+        }
     }
 
     public override void OnRightClick() {
         base.OnRightClick();
-
-        PlayerController.instance.AttackObject(this);
+        if(ownerId == 0) {
+            PlayerController.instance.AttackObject(this);
+        }
     }
 
     public virtual void MoveToPoint(TileData tile) {
@@ -99,9 +107,9 @@ public class Unit : WorldObject {
     }
 
     private void updateHealthbar() {
-        bool show = healthbar.isOnScreen() && (IsHovered() || IsSelected());
-        healthbar.SetWorldPos(transform.position + Vector3.up * 1.0f);
+        bool show = healthbar.isOnScreen() && (IsHovered() || IsSelected()) && isVisible;
         healthbar.gameObject.SetActive(show);
+        healthbar.SetWorldPos(transform.position + Vector3.up * 1.0f);
         healthbar.SetPercentage((float) healthCurrent / healthMax);
     }
 
@@ -109,17 +117,24 @@ public class Unit : WorldObject {
         return (int) ((healthMax - healthCurrent) * 2.0f);
     }
 
-    protected virtual void OnDestroy() {
-        if(PlayerController.instance) {
+    public void Repair() {
+        healthCurrent = healthMax;
+    }
+
+    protected override void OnDestroy() {
+        base.OnDestroy();
+        if(!GameManager.quitting) {
             if (PlayerController.instance.selectedObjects.Contains(this)) {
                 PlayerController.instance.selectedObjects.Remove(this);
             }
             if (PlayerController.instance.objectHovered == this) {
                 PlayerController.instance.objectHovered = null;
             }
-        }
-        if(World.instance) {
+            if(ownerId == 0) {
+                PlayerController.instance.ownedUnits.Remove(this);
+            }
             World.instance.units.Remove(this);
+            World.instance.fogOfWar.UpdateFogOfWar();
         }
         if(healthbar) Destroy(healthbar.gameObject);
     }

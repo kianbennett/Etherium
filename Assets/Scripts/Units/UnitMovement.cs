@@ -29,7 +29,7 @@ public class UnitMovement : MonoBehaviour {
     void Awake() {
         decDist = decCurve.keys.Last().time;
         lookDir = Vector3.back;
-        unit.model.rotation = Quaternion.LookRotation(lookDir);
+        unit.model.transform.rotation = Quaternion.LookRotation(lookDir);
     }
 
     void Update() {
@@ -46,7 +46,7 @@ public class UnitMovement : MonoBehaviour {
         // Set transform rotation from LookDir
         if (lookDir != Vector3.zero) {
             lookDir.y = 0; // Lock to xz axis
-            unit.model.rotation = Quaternion.Lerp(unit.model.rotation, Quaternion.LookRotation(lookDir), Time.deltaTime * 10);
+            unit.model.transform.rotation = Quaternion.Lerp(unit.model.transform.rotation, Quaternion.LookRotation(lookDir), Time.deltaTime * 10);
         }
     }
 
@@ -111,6 +111,9 @@ public class UnitMovement : MonoBehaviour {
         lookDir = moveDir;
         targetNode = node;
         unit.tile = pathNodes[node];
+        if(unit.ownerId == 0) {
+            World.instance.fogOfWar.UpdateFogOfWar();
+        }
     }
 
     public void EndPath() {

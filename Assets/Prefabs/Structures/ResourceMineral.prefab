@@ -823,12 +823,16 @@ MonoBehaviour:
   scaleOnHover: 1
   outlineColourHovered: {r: 0.6792453, g: 0.6792453, b: 0.6792453, a: 1}
   outlineColourSelected: {r: 0.84085375, g: 1, b: 0.7028302, a: 1}
+  isVisible: 0
   type: 1
-  amount: 0
   models:
   - {fileID: 3400259886940312438}
   - {fileID: 8595068394355836978}
   - {fileID: 611574069937551380}
+  collider: {fileID: 4866535786104413045}
+  resourceAmount: 0
+  lastHarvestTime: 0
+  unitsHarvesting: []
 --- !u!136 &4866535786104413045
 CapsuleCollider:
   m_ObjectHideFlags: 0

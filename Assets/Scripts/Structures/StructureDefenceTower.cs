@@ -22,8 +22,7 @@ public class StructureDefenceTower : Structure {
         base.Update();
 
         // Gets all units within range, ordered by distance (closest first)
-        // TODO: Remove this check for isFlying, testing only
-        Unit[] unitsInRange = World.instance.units.Where(o => Vector3.Distance(o.transform.position, transform.position) <= range && o.movement.isFlying)
+        Unit[] unitsInRange = World.instance.units.Where(o => Vector3.Distance(o.transform.position, transform.position) <= range && o.ownerId != ownerId)
             .OrderBy(o => Vector3.Distance(o.transform.position, transform.position)).ToArray();
 
         targetLine.gameObject.SetActive(unitsInRange.Length > 0);

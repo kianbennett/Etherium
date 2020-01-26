@@ -73,6 +73,7 @@ public class ResourceObject : WorldObject {
 
     private void updateResourceAmount(float amount) {
         resourceAmount = amount;
+        if(!isVisible) return;
         // Set model in array to active depending on the amount of resources it has left
         float a = resourceAmount * (models.Length - 1);
         for(int i = 0; i < models.Length; i++) {
@@ -81,9 +82,9 @@ public class ResourceObject : WorldObject {
     }
 
     private void updateResourceBar() {
-        bool show = resourceBar.isOnScreen() && (IsHovered() || lastHarvestTime < 1.0f);
-        resourceBar.SetWorldPos(transform.position + Vector3.up * 1.5f);
+        bool show = resourceBar.isOnScreen() && (IsHovered() || lastHarvestTime < 1.0f) && isVisible;
         resourceBar.gameObject.SetActive(show);
+        resourceBar.SetWorldPos(transform.position + Vector3.up * 1.5f);
         resourceBar.SetPercentage(resourceAmount);
         resourceBar.offset = shakeOffset;
     }
@@ -92,7 +93,7 @@ public class ResourceObject : WorldObject {
         base.OnMouseEnter();
         // If the player has a harvester unit selected and it at max resource, show a tooltip
         UnitHarvester[] selectedUnits = PlayerController.instance.selectedObjects.Where(o => o is UnitHarvester).Select(o => (UnitHarvester) o).ToArray();
-        if(GameManager.instance.IsAtMaxResource(type) && selectedUnits.Length > 0) {
+        if(PlayerController.instance.IsAtMaxResource(type) && selectedUnits.Length > 0) {
             HUD.instance.ShowTooltip("At max capacity");
         }
     }
@@ -102,7 +103,21 @@ public class ResourceObject : WorldObject {
         HUD.instance.HideTooltip();
     }
 
-    void OnDestroy() {
+    public override void SetVisible(bool visible) {
+        base.SetVisible(visible);
+        foreach(GameObject model in models) {
+            model.SetActive(false);
+        }
+        if(visible) {
+            float a = resourceAmount * (models.Length - 1);
+            for(int i = 0; i < models.Length; i++) {
+                models[i].SetActive(a <= i && a > i - 1);
+            }
+        }
+    }
+
+    protected override void OnDestroy() {
+        base.OnDestroy();
         if(resourceBar) Destroy(resourceBar.gameObject);
     }
 }

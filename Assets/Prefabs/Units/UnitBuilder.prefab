@@ -5532,16 +5532,21 @@ MonoBehaviour:
   scaleOnHover: 0
   outlineColourHovered: {r: 0.6792453, g: 0.6792453, b: 0.6792453, a: 1}
   outlineColourSelected: {r: 0.84085375, g: 1, b: 0.7028302, a: 1}
+  model: {fileID: 2604710850782353941}
+  collider: {fileID: 1428929899972870368}
+  playerColourRenderers:
+  - {fileID: 4531244863760085549}
+  isVisible: 0
+  ownerId: 0
   pathLineRenderer: {fileID: 6274568936955243191}
   pathLineTriangle: {fileID: 2838413721954213374}
   actionHandler: {fileID: 3948775877166513605}
   movement: {fileID: 5858159252581679628}
-  model: {fileID: 8016278647509237619}
   dustParticles: {fileID: 5357046443850820049}
   healthCurrent: 0
   healthMax: 25
   buildTime: 30
-  buildCost: 20
+  buildCost: 100
   buildAmount: 0
 --- !u!114 &7891265127179910948
 MonoBehaviour:

@@ -3,18 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class PlayerController : Singleton<PlayerController> {
+public class PlayerController : BaseController<PlayerController> {
 
     public GameObject moveMarkerPrefab;
     public Material buildingGhostMaterial, buildingGhostMaterialSet;
     public Material buildingGhostMaterialBad;
+    public Material playerColourMaterial, enemyColourMaterial;
 
     [HideInInspector] public List<WorldObject> selectedObjects;
-    [ReadOnly] public StructureBase playerBase;
     [ReadOnly] public WorldObject objectHovered;
     [ReadOnly] public bool isPlacingStructure;
-    [ReadOnly] public int minerals;
-    [ReadOnly] public int gems;
+
+    public List<Structure> ownedStructures = new List<Structure>();
+    public List<Unit> ownedUnits = new List<Unit>();
+
+    [HideInInspector] public StructureBase playerBase;
 
     // Perhaps move this to UnitBuilder
     private GameObject structureGhostModel;
@@ -85,13 +88,19 @@ public class PlayerController : Singleton<PlayerController> {
         // Clear actions
         foreach (Unit unit in selectedUnits) unit.actionHandler.ClearActions();
 
-        // Spawn marker
-        if (showMarker) Instantiate(moveMarkerPrefab, World.instance.GetTilePos(tile.i, tile.j), Quaternion.identity);
+        // Don't show the marker if no path was generated successfully
+        bool moveSuccessful = false;
 
         // Move each unit
         for (int i = 0; i < selectedUnits.Length; i++) {
             selectedUnits[i].MoveToPoint(tile);
+            if(selectedUnits[i].movement.pathNodes != null) {
+                moveSuccessful = true;
+            }
         }
+
+        // Spawn marker
+        if (showMarker && moveSuccessful) Instantiate(moveMarkerPrefab, World.instance.GetTilePos(tile.i, tile.j), Quaternion.identity);
     }
 
     public void HarvestResource(ResourceObject resource) {
@@ -104,6 +113,7 @@ public class PlayerController : Singleton<PlayerController> {
     }
 
     public void AttackObject(WorldObject worldObject) {
+        if(worldObject.ownerId != 1) return;
         UnitFighter[] selectedUnits = selectedObjects.Where(o => o is UnitFighter).Select(o => (UnitFighter) o).ToArray();
         if(selectedUnits.Length == 0) return;
 
@@ -148,8 +158,8 @@ public class PlayerController : Singleton<PlayerController> {
         foreach(Unit unit in selectedUnits) {
             cost += unit.GetRepairCost();
         }
-        if(GameManager.instance.gems >= cost) {
-            GameManager.instance.AddGems(-cost);
+        if(gems >= cost) {
+            AddGems(-cost);
             foreach(Unit unit in selectedUnits) {
                 unit.healthCurrent = unit.healthMax;
             }
@@ -162,8 +172,8 @@ public class PlayerController : Singleton<PlayerController> {
         foreach(Structure structure in selectedStructures) {
             cost += structure.GetRepairCost();
         }
-        if(GameManager.instance.minerals >= cost) {
-            GameManager.instance.AddMinerals(-cost);
+        if(minerals >= cost) {
+            AddMinerals(-cost);
             foreach(Structure structure in selectedStructures) {
                 structure.healthCurrent = structure.healthMax;
             }
