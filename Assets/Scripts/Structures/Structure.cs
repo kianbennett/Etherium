@@ -69,7 +69,7 @@ public class Structure : WorldObject {
     protected override void OnDestroy() {
         base.OnDestroy();
         if(healthbar) Destroy(healthbar.gameObject);
-        if(ownerId == 0 && !GameManager.quitting) {
+        if(ownerId == 0 && !GameManager.IsQuitting) {
             PlayerController.instance.ownedStructures.Remove(this);
         }
     }

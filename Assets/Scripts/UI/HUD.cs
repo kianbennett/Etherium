@@ -43,8 +43,8 @@ public class HUD : Singleton<HUD> {
         textGemsMaxValue.text = "MAX: " + PlayerController.instance.MaxGems.ToString();
         textMineralsMaxValue.text = "MAX: " + PlayerController.instance.MaxMinerals.ToString();
 
-        int minutes = (int) (GameManager.instance.timer / 60);
-        int seconds = (int) GameManager.instance.timer % 60;
+        int minutes = (int) (GameManager.instance.Timer / 60);
+        int seconds = (int) GameManager.instance.Timer % 60;
         textTimer.text = string.Format("{0:00}:{1:00}", minutes, seconds);
 
         Unit[] selectedUnits = PlayerController.instance.selectedObjects.Where(o => o is Unit).Select(o => (Unit) o).ToArray();
@@ -135,7 +135,7 @@ public class HUD : Singleton<HUD> {
     }
 
     public void Restart() {
-        GameManager.quitting = true;
+        GameManager.IsQuitting = true;
         screenFader.FadeOut(delegate {
             SceneManager.LoadScene("GameScene");
         }, 0.5f);
@@ -144,7 +144,7 @@ public class HUD : Singleton<HUD> {
     }
 
     public void Quit() {
-        GameManager.quitting = true;
+        GameManager.IsQuitting = true;
         screenFader.FadeOut(delegate {
             SceneManager.LoadScene("MainMenu");
         }, 0.5f);

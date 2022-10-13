@@ -95,7 +95,7 @@ public class UnitFighter : Unit {
 
     protected override void OnDestroy() {
         base.OnDestroy();
-        if(ownerId == 1 && !GameManager.quitting) {
+        if(ownerId == 1 && !GameManager.IsQuitting) {
             EnemyController.instance.fighterUnits.Remove(this);
         }
     }

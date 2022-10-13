@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class InputHandler : Singleton<InputHandler> {
-
+public class InputHandler : Singleton<InputHandler>
+{
     [ReadOnly] public Vector2 MouseDelta;
 
     private Vector2 leftClickInit, rightClickInit;
@@ -13,92 +13,116 @@ public class InputHandler : Singleton<InputHandler> {
     private bool leftClickHeld, rightClickHeld;
     private const int minDistForDrag = 5;
 
-    void Update() {
+    void Update()
+    {
         // TODO: disable input during scene transition
         handleKeys();
 
-        MouseDelta = (Vector2) Input.mousePosition - lastMousePos;
+        MouseDelta = (Vector2)Input.mousePosition - lastMousePos;
         lastMousePos = Input.mousePosition;
 
-        if (!EventSystem.current.IsPointerOverGameObject()) {
-            if (Input.GetMouseButtonDown(0)) {
+        if (!EventSystem.current.IsPointerOverGameObject())
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
                 leftClickHeld = true;
                 leftClickInit = Input.mousePosition;
                 onLeftClickDown();
             }
-            if (Input.GetMouseButtonDown(1)) {
+            if (Input.GetMouseButtonDown(1))
+            {
                 rightClickHeld = true;
                 rightClickInit = Input.mousePosition;
                 onRightClickDown();
             }
         }
 
-        if (leftClickHeld) {
+        if (leftClickHeld)
+        {
             float d = leftClickDelta.magnitude;
-            leftClickDelta = (Vector2) Input.mousePosition - leftClickInit;
+            leftClickDelta = (Vector2)Input.mousePosition - leftClickInit;
 
             // The first frame the mouse is dragged
             if (d == 0 && leftClickDelta.magnitude != 0) onLeftClickDragStart();
             onLeftClickHold();
         }
 
-        if (rightClickHeld) {
-            rightClickDelta = (Vector2) Input.mousePosition - rightClickInit;
+        if (rightClickHeld)
+        {
+            rightClickDelta = (Vector2)Input.mousePosition - rightClickInit;
             onRightClickHold();
         }
 
-        if (leftClickHeld && Input.GetMouseButtonUp(0)) {
+        if (leftClickHeld && Input.GetMouseButtonUp(0))
+        {
             leftClickHeld = false;
             onLeftClickRelease();
         }
 
-        if (rightClickHeld && Input.GetMouseButtonUp(1)) {
+        if (rightClickHeld && Input.GetMouseButtonUp(1))
+        {
             rightClickHeld = false;
             onRightClickRelease();
         }
 
-        if(Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape)) GameManager.instance.TogglePaused();
-        if(Input.GetKeyDown(KeyCode.F4)) GameManager.instance.ToggleSpedUp();
+        if (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape)) GameManager.instance.TogglePaused();
+        if (Input.GetKeyDown(KeyCode.F4)) GameManager.instance.ToggleSpedUp();
     }
 
-    private void handleKeys() {
+    private void handleKeys()
+    {
         if (Input.GetKey(KeyCode.LeftArrow)) CameraController.instance.PanLeft();
         if (Input.GetKey(KeyCode.RightArrow)) CameraController.instance.PanRight();
         if (Input.GetKey(KeyCode.UpArrow)) CameraController.instance.PanForward();
         if (Input.GetKey(KeyCode.DownArrow)) CameraController.instance.PanBackward();
     }
 
-    private void onLeftClickDown() {
+    private void onLeftClickDown()
+    {
     }
 
-    private void onLeftClickDragStart() {
+    private void onLeftClickDragStart()
+    {
         HUD.instance.selectionBox.Show();
         PlayerController.instance.DeselectAll();
     }
 
-    private void onLeftClickHold() {
-        if (leftClickDelta.magnitude != 0) {
+    private void onLeftClickHold()
+    {
+        if (leftClickDelta.magnitude != 0)
+        {
             HUD.instance.selectionBox.SetPos(leftClickInit + leftClickDelta / 2);
             HUD.instance.selectionBox.SetSize(leftClickDelta);
-        } else {
+        }
+        else
+        {
             HUD.instance.selectionBox.SetSize(Vector2.zero);
         }
     }
 
-    private void onLeftClickRelease() {
-        if (leftClickDelta.magnitude == 0) {
-            if(!PlayerController.instance.isPlacingStructure) {
+    private void onLeftClickRelease()
+    {
+        if (leftClickDelta.magnitude == 0)
+        {
+            if (!PlayerController.instance.isPlacingStructure)
+            {
                 PlayerController.instance.DeselectAll();
             }
-            if (PlayerController.instance.objectHovered && PlayerController.instance.objectHovered.ownerId != 1) {
+            if (PlayerController.instance.objectHovered && PlayerController.instance.objectHovered.ownerId != 1)
+            {
                 PlayerController.instance.objectHovered.OnLeftClick();
-            } else {
+            }
+            else
+            {
                 // bool hit = World.instance.surface.GetMousedOverCoordinates(out Vector3 hitPoint, out Vector2Int hitCoords);
                 Vector2Int hitCoords = World.instance.surface.tileHitCoords;
-                if(World.instance.generator.IsInBounds(hitCoords.x, hitCoords.y)) {
+                if (World.instance.generator.IsInBounds(hitCoords.x, hitCoords.y))
+                {
                     TileData tile = World.instance.tileDataMap[hitCoords.x, hitCoords.y];
                     PlayerController.instance.LeftClickTile(tile);
-                } else {
+                }
+                else
+                {
                     Debug.Log("Point outside world :(");
                 }
             }
@@ -106,29 +130,40 @@ public class InputHandler : Singleton<InputHandler> {
         HUD.instance.selectionBox.Hide();
     }
 
-    private void onRightClickDown() {
+    private void onRightClickDown()
+    {
         CameraController.instance.Grab();
     }
 
-    private void onRightClickHold() {
-        if (rightClickDelta.magnitude >= minDistForDrag && MouseDelta.magnitude > 0) {
+    private void onRightClickHold()
+    {
+        if (rightClickDelta.magnitude >= minDistForDrag && MouseDelta.magnitude > 0)
+        {
             CameraController.instance.Pan();
         }
     }
 
-    private void onRightClickRelease() {
+    private void onRightClickRelease()
+    {
         CameraController.instance.Release();
 
-        if (rightClickDelta.magnitude < minDistForDrag) {
-            if (PlayerController.instance.objectHovered && PlayerController.instance.objectHovered.ownerId != 1) {
+        if (rightClickDelta.magnitude < minDistForDrag)
+        {
+            if (PlayerController.instance.objectHovered && PlayerController.instance.objectHovered.ownerId != 1)
+            {
                 PlayerController.instance.objectHovered.OnRightClick();
-            } else {
+            }
+            else
+            {
                 // bool hit = World.instance.surface.GetMousedOverCoordinates(out Vector3 hitPoint, out Vector2Int hitCoords);
                 Vector2Int hitCoords = World.instance.surface.tileHitCoords;
-                if(World.instance.generator.IsInBounds(hitCoords.x, hitCoords.y)) {
+                if (World.instance.generator.IsInBounds(hitCoords.x, hitCoords.y))
+                {
                     TileData tile = World.instance.tileDataMap[hitCoords.x, hitCoords.y];
                     PlayerController.instance.RightClickTile(tile);
-                } else {
+                }
+                else
+                {
                     Debug.Log("Point outside world :(");
                 }
             }

@@ -13,7 +13,7 @@ public class UnitScout : Unit {
 
     protected override void OnDestroy() {
         base.OnDestroy();
-        if(ownerId == 1 && !GameManager.quitting) {
+        if(ownerId == 1 && !GameManager.IsQuitting) {
             EnemyController.instance.scoutUnits.Remove(this);
         }
     }

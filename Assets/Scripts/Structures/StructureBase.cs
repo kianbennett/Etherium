@@ -107,7 +107,7 @@ public class StructureBase : Structure {
         base.OnDestroy();
         if(progressBar) Destroy(progressBar.gameObject);
 
-        if(!GameManager.quitting) {
+        if(!GameManager.IsQuitting) {
             if(ownerId == 0) {
             GameManager.instance.Defeat();
             } else {

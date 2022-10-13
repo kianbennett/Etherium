@@ -92,7 +92,7 @@ public class WorldObject : MonoBehaviour {
     }
 
     protected virtual void OnDestroy() {
-        if(ownerId == 1 && !GameManager.quitting) {
+        if(ownerId == 1 && !GameManager.IsQuitting) {
             EnemyController.instance.ownedObjects.Remove(this);
         }
     }

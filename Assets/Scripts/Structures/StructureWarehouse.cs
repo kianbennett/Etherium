@@ -18,7 +18,7 @@ public class StructureWarehouse : Structure {
 
     protected override void OnDestroy() {
         base.OnDestroy();
-        if(!GameManager.quitting) {
+        if(!GameManager.IsQuitting) {
             if(ownerId == 0) {
                 PlayerController.instance.warehouses--;
                 // Use these to clamp the values to the new max
