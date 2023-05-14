@@ -1,96 +1,179 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 
-public class UnitHarvester : Unit {
+public class UnitHarvester : Unit
+{
+    private Dictionary<ResourceType, Healthbar> resourceBars;
+    private Dictionary<ResourceType, int> resourceAmounts;
+    private Dictionary<ResourceType, int> resourceCapacities;
 
     // Each frame the unit is harvesting harvestAmount increases
     // When this reaches harvestAmountPerResource resources are gained
-    [ReadOnly] public float harvestAmount;
-    [HideInInspector] public ResourceObject resourceToHarvest;
-
     private bool isHarvesting;
+    private float harvestDuration;
 
-    private const float harvestAmountPerResource = 0.1f;
+    private const float harvestDurationForResource = 0.1f;
     private const float harvestSpeed = 0.05f;
+    private const int harvestResourceAmount = 5;
 
-    protected override void Awake() {
-        base.Awake();
+    private HarvesterBB bb;
+    private HarvesterBT bt;
+
+    public bool IsHarvesting { get { return isHarvesting; } }
+
+    public override void Init(int ownerId)
+    {
+        base.Init(ownerId);
+
+        resourceBars = new() 
+        {
+            { ResourceType.Mineral, HUD.instance.CreateResourceBar(ResourceType.Mineral) },
+            { ResourceType.Gem, HUD.instance.CreateResourceBar(ResourceType.Gem) }
+        };
+        resourceAmounts = new()
+        {
+            { ResourceType.Mineral, 0 },
+            { ResourceType.Gem, 0 }
+        };
+        resourceCapacities = new()
+        {
+            { ResourceType.Mineral, 100 },
+            { ResourceType.Gem, 25 }
+        };
+
+        bb = new HarvesterBB(this);
+        bt = new HarvesterBT(bb);
+        bt.Start(this);
     }
 
-    protected override void Start() {
-        base.Start();
-        if(ownerId == 1) {
-            EnemyController.instance.harvesterUnits.Add(this);
-        }
-    }
-
-    protected override void Update() {
+    protected override void Update()
+    {
         base.Update();
 
-        if(resourceToHarvest != null) {
-            float distToResource = Vector2Int.Distance(tile.pos, resourceToHarvest.tile.pos);
-            if(distToResource <= 1 && movement.hasReachedDestination && resourceToHarvest.resourceAmount > 0) {
-                movement.LookAtTile(resourceToHarvest.tile);
+        if(isHarvesting)
+        {
+            harvestDuration += Time.deltaTime * harvestSpeed;
+            if (harvestDuration >= harvestDurationForResource)
+            {
+                harvestDuration = 0;
+                int resourceAmount = bb.resourceToHarvest.Harvest(harvestResourceAmount);
 
-                harvestAmount += Time.deltaTime * harvestSpeed;
-                if(harvestAmount >= harvestAmountPerResource) {
-                    harvestAmount = 0;
-                    resourceToHarvest.Harvest(harvestAmountPerResource);
-                    if(resourceToHarvest.type == ResourceType.Gem) {
-                        if(ownerId == 0) PlayerController.instance.AddGems(5);
-                        if(ownerId == 1) EnemyController.instance.AddGems(5);
-                    }
-                    if(resourceToHarvest.type == ResourceType.Mineral) {
-                        if(ownerId == 0) PlayerController.instance.AddMinerals(20);
-                        if(ownerId == 1) EnemyController.instance.AddMinerals(20);
-                    }
-                    if((ownerId == 0 && PlayerController.instance.IsAtMaxResource(resourceToHarvest.type))) {
-                        cancelHarvesting();
-                        return;
-                    }
-                    if(ownerId == 1 && EnemyController.instance.IsAtMaxResource(resourceToHarvest.type)) {
-                        cancelHarvesting();
-                        return;
-                    }
-                }
-                isHarvesting = true;
-                if(!resourceToHarvest.unitsHarvesting.Contains(this)) resourceToHarvest.unitsHarvesting.Add(this);
-            } else if(isHarvesting) {
-                cancelHarvesting();
+                resourceAmounts[bb.resourceToHarvest.Type] += resourceAmount;
             }
         }
+
+        // if (HasResourceToHarvest())
+        // {
+        //     float distToResource = Vector2Int.Distance(tile.pos, bb.resourceToHarvest.tile.pos);
+
+        //     if (distToResource <= 1 && Movement.HasReachedDestination && bb.resourceToHarvest.RemainingResource > 0 && !IsAtMaxResource(bb.resourceToHarvest.Type))
+        //     {
+        //         isHarvesting = true;
+
+        //         Movement.LookAtTile(bb.resourceToHarvest.tile);
+
+        //         bb.resourceToHarvest.StartUnitHarvest(this);
+
+        //         harvestDuration += Time.deltaTime * harvestSpeed;
+        //         if (harvestDuration >= harvestDurationForResource)
+        //         {
+        //             harvestDuration = 0;
+        //             int resourceAmount = bb.resourceToHarvest.Harvest(this, harvestResourceAmount);
+
+        //             resourceAmounts[bb.resourceToHarvest.Type] += resourceAmount;
+        //         }   
+        //     }
+        //     else if (isHarvesting)
+        //     {
+        //         cancelHarvesting();
+        //     }
+        // }
+
+        if(modelAnimator)
+        {
+            modelAnimator.SetBool("IsHarvesting", isHarvesting);
+        }
+
+        updateResourceBar(ResourceType.Mineral);
+        updateResourceBar(ResourceType.Gem);
     }
 
-    public void HarvestResource(ResourceObject resource) {
-        if(resource == resourceToHarvest || PlayerController.instance.IsAtMaxResource(resource.type)) return;
-        cancelHarvesting();
+    public void HarvestResource(ResourceObject resource)
+    {
+        if (resource == bb.resourceToHarvest || IsAtMaxResource(resource.Type)) return;
 
-        TileData[] freeTiles = resource.tile.connections.Where(o => (o.occupiedUnit == null || o.occupiedUnit == this) && o.IsTileAccessible(movement.isFlying)).ToArray();
-        freeTiles = freeTiles.OrderBy(o => Vector3.Distance(o.worldPos, transform.position)).ToArray();
+        TileData tile = resource.GetNearestAdjacentTile(transform.position, Movement.IsFlying);
 
-        if(freeTiles.Length > 0) {
-            MoveToPoint(freeTiles[0]);
-            resourceToHarvest = resource;
+        if(tile != null)
+        {
+            CancelHarvesting();
+            MoveToPoint(tile);
+            bb.resourceToHarvest = resource;
         }
     }
 
-    public override void MoveToPoint(TileData tile) {
+    public override void MoveToPoint(TileData tile)
+    {
         base.MoveToPoint(tile);
-        cancelHarvesting();
+        //CancelHarvesting();
     }
 
-    private void cancelHarvesting() {
-        if(resourceToHarvest && resourceToHarvest.unitsHarvesting.Contains(this)) resourceToHarvest.unitsHarvesting.Remove(this);
-        resourceToHarvest = null;
+    public void StartHarvesting()
+    {
+        if(bb.resourceToHarvest == null)
+        {
+            Debug.Log("Trying to start harvesting without a resource!");
+            return;
+        }
+
+        bb.resourceToHarvest.StartUnitHarvest(this);
+        isHarvesting = true;
+    }
+
+    public void CancelHarvesting()
+    {
+        bb.resourceToHarvest?.CancelUnitHarvest(this);
+        bb.resourceToHarvest = null;
         isHarvesting = false;
     }
 
-    protected override void OnDestroy() {
-        base.OnDestroy();
-        if(ownerId == 1 & !GameManager.IsQuitting) {
-            EnemyController.instance.harvesterUnits.Remove(this);
-        }
+    private void updateResourceBar(ResourceType type)
+    {
+        Healthbar resourceBar = resourceBars[type];
+        bool show = resourceBar.isOnScreen() && (isHovered || isSelected) && isVisible;
+        resourceBar.gameObject.SetActive(show);
+        resourceBar.SetWorldPos(transform.position + Vector3.up * (1.15f + 0.15f * (int) type));
+        resourceBar.SetPercentage(GetResourcePercentage(type));
+    }
+
+    public bool HasResourceToHarvest()
+    {
+        return bb.resourceToHarvest != null;
+    }
+
+    public int GetResource(ResourceType type)
+    {
+        return resourceAmounts[type];
+    }
+
+    public float GetResourcePercentage(ResourceType type)
+    {
+        return (float) resourceAmounts[type] / resourceCapacities[type];
+    }
+
+    public bool IsAtMaxResource(ResourceType type)
+    {
+        return resourceAmounts[type] >= resourceCapacities[type];
+    }
+
+    public bool HasCapacityForAnyResource()
+    {
+        return !IsAtMaxResource(ResourceType.Gem) || !IsAtMaxResource(ResourceType.Mineral);
+    }
+
+    public void EmptyResources()
+    {
+        resourceAmounts[ResourceType.Gem] = 0;
+        resourceAmounts[ResourceType.Mineral] = 0;
     }
 }

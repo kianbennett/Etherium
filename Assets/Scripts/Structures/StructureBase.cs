@@ -2,51 +2,71 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class StructureBase : Structure {
-
+public class StructureBase : Structure 
+{
     private Healthbar progressBar;
 
     private List<Unit> unitBuildQueue = new List<Unit>();
     private float buildTick;
 
-    protected override void Awake() {
+    protected override void Awake() 
+    {
         base.Awake();
         
         progressBar = HUD.instance.CreateProgressBar();
     }
 
-    protected override void Update() {
+    protected override void Update() 
+    {
         base.Update();
 
-        if(unitBuildQueue.Count > 0) {
+        if(unitBuildQueue.Count > 0) 
+        {
             buildTick += Time.deltaTime;
-            if(buildTick > unitBuildQueue[0].buildTime) {
+            if(buildTick > unitBuildQueue[0].BuildTime) 
+            {
                 buildTick = 0;
                 spawnUnit(unitBuildQueue[0]);
                 unitBuildQueue.RemoveAt(0);
             }
-        } else {
+        } 
+        else 
+        {
             buildTick = 0;
         }
         updateProgressBar();
     }
 
-    public void AddUnitToQueue(Unit unit) {
-        if(ownerId == 0) {
-            if(PlayerController.instance.gems >= unit.buildCost) {
+    public void AddUnitToQueue(Unit unit) 
+    {
+        if(IsPlayerOwned) 
+        {
+            if(PlayerController.instance.gems >= unit.BuildCost) 
+            {
                 unitBuildQueue.Add(unit);
-                PlayerController.instance.AddGems(-unit.buildCost);
+                PlayerController.instance.AddGems(-unit.BuildCost);
             }
-        } else {
-            if(EnemyController.instance.gems >= unit.buildCost) {
+        } 
+        else 
+        {
+            if(EnemyController.instance.gems >= unit.BuildCost) 
+            {
                 unitBuildQueue.Add(unit);
-                EnemyController.instance.AddGems(-unit.buildCost);
+                EnemyController.instance.AddGems(-unit.BuildCost);
             }
         }
     }
 
-    private void spawnUnit(Unit unit) {
-        Unit spawnedUnit = World.instance.SpawnUnit(unit, ownerId, tile.i, tile.j);
+    public override void OnRightClick()
+    {
+        base.OnRightClick();
+
+        PlayerController.instance.DepositResources(this);
+    }
+
+    private void spawnUnit(Unit unit) 
+    {
+        Unit spawnedUnit = World.instance.SpawnUnit(unit, OwnerId, tile.i, tile.j);
 
         // Start with tile directly outside the entrance
         TileData startingTile = World.instance.tileDataMap[tile.i, tile.j - 1];
@@ -62,19 +82,27 @@ public class StructureBase : Structure {
         tilesToCheck.Add(startingTile);
         bool checkForTile = true;
 
-        while(checkForTile) {
-            for(int i = tilesToCheck.Count - 1; i >= 0; i--) {
-                if (tilesToCheck[i].IsTileAccessible(unit.movement.isFlying)) {
-                    if(tilesToCheck[i].occupiedUnit) {
+        while(checkForTile) 
+        {
+            for(int i = tilesToCheck.Count - 1; i >= 0; i--) 
+            {
+                if (tilesToCheck[i].IsTileAccessible(unit.Movement.IsFlying)) 
+                {
+                    if(tilesToCheck[i].occupiedUnit) 
+                    {
                         bool hasConnection = false;
-                        foreach (TileData connectedTile in tilesToCheck[i].connections) {
-                            if (connectedTile.IsTileAccessible(unit.movement.isFlying) && !checkedTiles.Contains(connectedTile)) {
+                        foreach (TileData connectedTile in tilesToCheck[i].connections) 
+                        {
+                            if (connectedTile.IsTileAccessible(unit.Movement.IsFlying) && !checkedTiles.Contains(connectedTile)) 
+                            {
                                 tilesToCheck.Add(connectedTile);
                                 hasConnection = true;
                             }
                         }
                         if(!hasConnection) checkForTile = false;
-                    } else {
+                    } 
+                    else 
+                    {
                         freeTile = tilesToCheck[i];
                         checkForTile = false;
                         break;
@@ -86,37 +114,49 @@ public class StructureBase : Structure {
         }
 
         // If there is no free tile available, move onto the starting tile (may double up units)
-        if(freeTile != null) {
+        if(freeTile != null) 
+        {
             spawnedUnit.MoveToPoint(freeTile);
-        } else {
+        } 
+        else 
+        {
             // Use movement.SetPath so it doesn't check if the tile has a unit on it
-            spawnedUnit.movement.SetPath(new List<TileData>() { tile, startingTile });
+            spawnedUnit.Movement.SetPath(new List<TileData>() { tile, startingTile });
         }
     }
 
-    private void updateProgressBar() {
+    private void updateProgressBar() 
+    {
         bool show = progressBar.isOnScreen() && unitBuildQueue.Count > 0;
         progressBar.gameObject.SetActive(show);
         progressBar.SetWorldPos(transform.position + Vector3.up * 1.5f);
-        if(show) {
-            progressBar.SetPercentage(buildTick / unitBuildQueue[0].buildTime);
+        if(show) 
+        {
+            progressBar.SetPercentage(buildTick / unitBuildQueue[0].BuildTime);
         }
     }
 
-    protected override void OnDestroy() {
+    protected override void OnDestroy() 
+    {
         base.OnDestroy();
+
         if(progressBar) Destroy(progressBar.gameObject);
 
-        if(!GameManager.IsQuitting) {
-            if(ownerId == 0) {
-            GameManager.instance.Defeat();
-            } else {
+        if(!GameManager.IsQuitting) 
+        {
+            if(IsPlayerOwned) 
+            {
+                GameManager.instance.Defeat();
+            } 
+            else 
+            {
                 GameManager.instance.Victory();
             }
         }
     }
 
     // Make base always visible to let players see where the enemy's base is
-    public override void SetVisible(bool visible) {
+    public override void SetVisible(bool visible) 
+    {
     }
 }

@@ -1,20 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿public class UnitScout : Unit
+{
+    private ScoutBB bb;
+    private ScoutBT bt;
 
-public class UnitScout : Unit {
+    public override void Init(int ownerId)
+    {
+        base.Init(ownerId);
 
-    protected override void Start() {
-        base.Start();
-        if(ownerId == 1) {
-            EnemyController.instance.scoutUnits.Add(this);
-        }
-    }
-
-    protected override void OnDestroy() {
-        base.OnDestroy();
-        if(ownerId == 1 && !GameManager.IsQuitting) {
-            EnemyController.instance.scoutUnits.Remove(this);
-        }
+        bb = new ScoutBB(this);
+        bt = new ScoutBT(bb);
+        bt.Start(this);
     }
 }

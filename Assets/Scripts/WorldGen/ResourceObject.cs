@@ -6,36 +6,45 @@ public enum ResourceType { Gem, Mineral }
 
 public class ResourceObject : WorldObject
 {
-    public ResourceType type;
-    public GameObject[] models; // First model is empty, last is full
-    [ReadOnly] public float resourceAmount; // 0 to 1
+    public ResourceType Type { get { return type; } }
+    public float RemainingResource { get { return currentResourceAmount; } }
+    public float RemainingResourcePercentage { get { return currentResourceAmount / resourceCapacity; } }
 
-    [ReadOnly] public float lastHarvestTime;
-    [HideInInspector] public List<UnitHarvester> unitsHarvesting = new List<UnitHarvester>();
+    [SerializeField] private GameObject[] models; // First model is empty, last is full
+    [SerializeField] private ResourceType type;
+    [SerializeField] private int resourceCapacity;
+    [SerializeField] private float resourceBarOffset;
+    [SerializeField] private float resourceRegenDelay;
+    [SerializeField] private float resourceRegenRate;
 
+    [SerializeField, ReadOnly] private float lastHarvestTime;
+
+    private float currentResourceAmount;
     private float shakeTick;
     private const float shakeInterval = 0.05f, shakeDist = 0.05f;
     private Vector3 shakeOffset;
-
     private Healthbar resourceBar;
+
+    private List<UnitHarvester> unitsHarvesting;
 
     protected override void Awake()
     {
         base.Awake();
 
-        resourceAmount = 1;
+        currentResourceAmount = resourceCapacity;
         lastHarvestTime = float.MaxValue;
-        resourceBar = HUD.instance.CreateResourceBar();
+        resourceBar = HUD.instance.CreateResourceBar(type);
+        unitsHarvesting = new();
     }
 
     protected override void Update()
     {
         base.Update();
 
-        if (resourceAmount < 1 && lastHarvestTime > 2)
+        // Regen resource when not being harvested
+        if (currentResourceAmount < resourceCapacity && lastHarvestTime > resourceRegenDelay)
         {
-            updateResourceAmount(resourceAmount + Time.deltaTime * 0.05f);
-            if (resourceAmount > 1) updateResourceAmount(1);
+            setCurrentResourceAmount(currentResourceAmount + Time.deltaTime * resourceRegenRate);
         }
         lastHarvestTime += Time.deltaTime;
 
@@ -50,26 +59,37 @@ public class ResourceObject : WorldObject
         PlayerController.instance.HarvestResource(this);
     }
 
-    public void Harvest(float delta)
-    {
-        resourceAmount -= delta;
-        if (resourceAmount < 0) resourceAmount = 0;
-
-        updateResourceAmount(resourceAmount);
-
+    public int Harvest(int amount)
+    {   
+        float resourceAmountBeforeHarvest = currentResourceAmount;
+        setCurrentResourceAmount(currentResourceAmount - amount);
         lastHarvestTime = 0;
+
+        return (int) (resourceAmountBeforeHarvest - currentResourceAmount);
     }
 
-    private void updateResourceAmount(float amount)
+    public void StartUnitHarvest(UnitHarvester unit)
     {
-        resourceAmount = amount;
-        if (!isVisible) return;
-        // Set model in array to active depending on the amount of resources it has left
-        float a = resourceAmount * (models.Length - 1);
-        for (int i = 0; i < models.Length; i++)
+        if(!unitsHarvesting.Contains(unit))
         {
-            models[i].SetActive(a <= i && a > i - 1);
+            unitsHarvesting.Add(unit);    
         }
+    }
+
+    public void CancelUnitHarvest(UnitHarvester unit)
+    {
+        unitsHarvesting.Remove(unit);
+    }
+
+    private void setCurrentResourceAmount(float amount)
+    {
+        // Stop the resource amount from going below zero or beyond the capacity
+        amount = Mathf.Clamp(amount, 0.0f, resourceCapacity);
+
+        currentResourceAmount = amount;
+        if (!isVisible) return;
+
+        updateModels(RemainingResourcePercentage);
     }
 
     private void updateShake()
@@ -97,17 +117,20 @@ public class ResourceObject : WorldObject
 
     private void updateResourceBar()
     {
-        bool show = resourceBar.isOnScreen() && (IsHovered() || lastHarvestTime < 1.0f) && isVisible;
+        bool show = resourceBar.isOnScreen() && (isHovered || unitsHarvesting.Count > 0) && isVisible;
         resourceBar.gameObject.SetActive(show);
-        resourceBar.SetWorldPos(transform.position + Vector3.up * 1.5f);
-        resourceBar.SetPercentage(resourceAmount);
-        resourceBar.offset = shakeOffset;
+        resourceBar.SetWorldPos(transform.position + Vector3.up * resourceBarOffset);
+        resourceBar.SetPercentage(currentResourceAmount / resourceCapacity);
+        resourceBar.SetOffset(shakeOffset);
     }
 
     protected override void OnMouseEnter()
     {
         base.OnMouseEnter();
         // If the player has a harvester unit selected and it at max resource, show a tooltip
+
+        // PROBABLY DONT NEED THIS ANYMORE
+        
         UnitHarvester[] selectedUnits = PlayerController.instance.selectedObjects.Where(o => o is UnitHarvester).Select(o => (UnitHarvester)o).ToArray();
         if (PlayerController.instance.IsAtMaxResource(type) && selectedUnits.Length > 0)
         {
@@ -124,23 +147,40 @@ public class ResourceObject : WorldObject
     public override void SetVisible(bool visible)
     {
         base.SetVisible(visible);
+
         foreach (GameObject model in models)
         {
-            model.SetActive(false);
+            model.SetActive(isDiscovered);
         }
+
         if (visible)
         {
-            float a = resourceAmount * (models.Length - 1);
-            for (int i = 0; i < models.Length; i++)
-            {
-                models[i].SetActive(a <= i && a > i - 1);
-            }
+            updateModels(RemainingResourcePercentage);
         }
+        else if(isDiscovered)
+        {
+            updateModels(0);
+        }
+    }
+
+    public bool HasSpaceToHarvest()
+    {
+        return tile.connections.Where(o => o.occupiedUnit == null && o.occupiedObject == null && o.IsTileAccessible(false)).Count() > 0;
     }
 
     protected override void OnDestroy()
     {
         base.OnDestroy();
         if (resourceBar) Destroy(resourceBar.gameObject);
+    }
+
+    // Set model in array to active depending on the amount of resources it has left
+    private void updateModels(float resourcePercentage)
+    {
+        float a = resourcePercentage * (models.Length - 1);
+        for (int i = 0; i < models.Length; i++)
+        {
+            models[i].SetActive(a <= i && a > i - 1);
+        }
     }
 }

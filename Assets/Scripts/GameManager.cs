@@ -26,8 +26,7 @@ public class GameManager : Singleton<GameManager>
         if (State == GameState.InGame)
         {
             // If the player has no more harvester units and no gems to create more then they lose
-            UnitHarvester[] harvesters = PlayerController.instance.ownedUnits.Where(o => o is UnitHarvester).Select(o => (UnitHarvester)o).ToArray();
-            if (harvesters.Length == 0 && PlayerController.instance.gems < World.instance.unitBuilderPrefab.buildCost)
+            if (!PlayerController.instance.HasAnyHarvestersRemaining() && PlayerController.instance.gems < World.instance.unitBuilderPrefab.BuildCost)
             {
                 Defeat();
             }
@@ -35,6 +34,9 @@ public class GameManager : Singleton<GameManager>
 
         if (Input.GetKeyDown(KeyCode.K)) Victory();
         if (Input.GetKeyDown(KeyCode.L)) Defeat();
+
+        if (Input.GetKeyDown(KeyCode.N)) PlayerController.instance.AddGems(40);
+        if (Input.GetKeyDown(KeyCode.N)) PlayerController.instance.AddMinerals(40);
     }
 
     public void SetPaused(bool paused)

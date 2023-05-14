@@ -102,15 +102,16 @@ public class InputHandler : Singleton<InputHandler>
 
     private void onLeftClickRelease()
     {
+        PlayerController playerController = PlayerController.instance;
         if (leftClickDelta.magnitude == 0)
         {
-            if (!PlayerController.instance.isPlacingStructure)
+            if (!playerController.isPlacingStructure)
             {
-                PlayerController.instance.DeselectAll();
+                playerController.DeselectAll();
             }
-            if (PlayerController.instance.objectHovered && PlayerController.instance.objectHovered.ownerId != 1)
+            if (playerController.objectHovered && playerController.objectHovered.OwnerId != 1)
             {
-                PlayerController.instance.objectHovered.OnLeftClick();
+                playerController.objectHovered.OnLeftClick();
             }
             else
             {
@@ -119,7 +120,7 @@ public class InputHandler : Singleton<InputHandler>
                 if (World.instance.generator.IsInBounds(hitCoords.x, hitCoords.y))
                 {
                     TileData tile = World.instance.tileDataMap[hitCoords.x, hitCoords.y];
-                    PlayerController.instance.LeftClickTile(tile);
+                    playerController.LeftClickTile(tile);
                 }
                 else
                 {
@@ -145,13 +146,14 @@ public class InputHandler : Singleton<InputHandler>
 
     private void onRightClickRelease()
     {
+        PlayerController playerController = PlayerController.instance;
         CameraController.instance.Release();
 
         if (rightClickDelta.magnitude < minDistForDrag)
         {
-            if (PlayerController.instance.objectHovered && PlayerController.instance.objectHovered.ownerId != 1)
+            if (playerController.objectHovered && playerController.objectHovered.OwnerId != 1)
             {
-                PlayerController.instance.objectHovered.OnRightClick();
+                playerController.objectHovered.OnRightClick();
             }
             else
             {
@@ -160,7 +162,7 @@ public class InputHandler : Singleton<InputHandler>
                 if (World.instance.generator.IsInBounds(hitCoords.x, hitCoords.y))
                 {
                     TileData tile = World.instance.tileDataMap[hitCoords.x, hitCoords.y];
-                    PlayerController.instance.RightClickTile(tile);
+                    playerController.RightClickTile(tile);
                 }
                 else
                 {

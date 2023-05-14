@@ -83,8 +83,8 @@ public class Outline : MonoBehaviour {
   void Awake() {
 
     // Cache renderers
-    // Don't put ouline on particles or sprite renderers
-    renderers = GetComponentsInChildren<Renderer>(true).Where(o => !(o is ParticleSystemRenderer) && !(o is SpriteRenderer)).ToArray();
+    // Don't put ouline on particles or sprite renderers or line renderer
+    renderers = GetComponentsInChildren<Renderer>(true).Where(o => !(o is ParticleSystemRenderer) && !(o is SpriteRenderer) && !(o is LineRenderer)).ToArray();
 
     // Instantiate outline materials
     outlineMaskMaterial = Instantiate(Resources.Load<Material>(@"Materials/OutlineMask"));

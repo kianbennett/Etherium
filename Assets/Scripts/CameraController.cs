@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering.PostProcessing;
 
@@ -8,8 +6,8 @@ using UnityEngine.Rendering.PostProcessing;
 *    Contains camera movement functionality
 */
 
-public class CameraController : Singleton<CameraController> {
-
+public class CameraController : Singleton<CameraController>
+{
     public new Camera camera;
     public Transform target;
     public PostProcessVolume postProcessVolume;
@@ -27,7 +25,8 @@ public class CameraController : Singleton<CameraController> {
     private Vector3 worldSpaceGrab, worldSpaceGrabLast;
     private float orthographicSize;
 
-    protected override void Awake() {
+    protected override void Awake()
+    {
         base.Awake();
 
         localCameraOffset = camera.transform.localPosition;
@@ -35,19 +34,33 @@ public class CameraController : Singleton<CameraController> {
         orthographicSize = camera.orthographicSize;
     }
 
-    void Update() {
+    void Update()
+    {
         // TODO: move this to InputHandler
         isRotating = Input.GetMouseButton(2);
 
-        if(isRotating) {
+        if (isRotating)
+        {
             float rot = Input.GetAxis("Mouse X") * rotationSpeed;
             target.Rotate(Vector3.up, rot);
         }
 
         // Only zoom if the mouse isn't over a UI element to avoid zooming when scrolling
-        if (!EventSystem.current.IsPointerOverGameObject()) {
-            if (Input.mouseScrollDelta.y > 0) Zoom(zoomSpeed);
-            if (Input.mouseScrollDelta.y < 0) Zoom(-zoomSpeed);
+        if (!EventSystem.current.IsPointerOverGameObject())
+        {
+            if (Input.mouseScrollDelta.y > 0) Zoom(-zoomSpeed);
+            if (Input.mouseScrollDelta.y < 0) Zoom(zoomSpeed);
+        }
+
+        if (Input.GetKey(KeyCode.Space) && PlayerController.instance.selectedObjects.Count > 0)
+        {
+            Vector3 averagePosition = Vector3.zero;
+            foreach(WorldObject selectedObject in PlayerController.instance.selectedObjects)
+            {
+                averagePosition += selectedObject.transform.position;
+            }
+            averagePosition /= PlayerController.instance.selectedObjects.Count;
+            targetPosition = averagePosition;
         }
 
         target.position = panSmoothing ? Vector3.Lerp(target.position, targetPosition, Time.deltaTime * panSmoothingValue) : targetPosition;
@@ -55,33 +68,43 @@ public class CameraController : Singleton<CameraController> {
         camera.orthographicSize = Mathf.Lerp(camera.orthographicSize, orthographicSize, Time.deltaTime * 20);
     }
 
-    public void Move(Vector3 delta) {
+    public void Move(Vector3 delta)
+    {
         targetPosition += delta;
         targetPosition.x = Mathf.Clamp(targetPosition.x, -World.instance.generator.worldSize / 2.0f, World.instance.generator.worldSize / 2.0f);
         targetPosition.z = Mathf.Clamp(targetPosition.z, -World.instance.generator.worldSize / 2.0f, World.instance.generator.worldSize / 2.0f);
     }
 
-    public void PanLeft() {
+    public void PanLeft()
+    {
         if (isGrabbing) return;
-        Move(-target.right * panSpeed * Time.deltaTime);
+        float cameraSizeScalar = (1 + orthographicSize / minCameraSize * 0.25f);
+        Move(-target.right * panSpeed * cameraSizeScalar * Time.deltaTime);
     }
 
-    public void PanRight() {
+    public void PanRight()
+    {
         if (isGrabbing) return;
-        Move(target.right * panSpeed * Time.deltaTime);
+        float cameraSizeScalar = (1 + orthographicSize / minCameraSize * 0.25f);
+        Move(target.right * panSpeed * cameraSizeScalar * Time.deltaTime);
     }
 
-    public void PanForward() {
+    public void PanForward()
+    {
         if (isGrabbing) return;
-        Move(target.forward * panSpeed * Time.deltaTime);
+        float cameraSizeScalar = (1 + orthographicSize / minCameraSize * 0.25f);
+        Move(target.forward * panSpeed * cameraSizeScalar * Time.deltaTime);
     }
 
-    public void PanBackward() {
+    public void PanBackward()
+    {
         if (isGrabbing) return;
-        Move(-target.forward * panSpeed * Time.deltaTime);
+        float cameraSizeScalar = (1 + orthographicSize / minCameraSize * 0.25f);
+        Move(-target.forward * panSpeed * cameraSizeScalar * Time.deltaTime);
     }
 
-    public void SetAbsolutePosition(Vector3 pos) {
+    public void SetAbsolutePosition(Vector3 pos)
+    {
         targetPosition = pos;
         target.position = pos;
         worldSpaceGrab = Vector3.zero;
@@ -89,10 +112,12 @@ public class CameraController : Singleton<CameraController> {
     }
 
     // Gets the ground position where the mouse right clicks
-    public void Grab() {
+    public void Grab()
+    {
         Ray ray = camera.ScreenPointToRay(Input.mousePosition);
         bool hit = Physics.Raycast(ray, out RaycastHit hitInfo, float.MaxValue, 1 << LayerMask.NameToLayer("Ground"));
-        if (hit) {
+        if (hit)
+        {
             worldSpaceGrab = hitInfo.point;
             worldSpaceGrabLast = worldSpaceGrab;
             isGrabbing = true;
@@ -100,23 +125,28 @@ public class CameraController : Singleton<CameraController> {
     }
 
     // Called when the mouse moves while grabbing
-    public void Pan() {
+    public void Pan()
+    {
         Ray ray = camera.ScreenPointToRay(Input.mousePosition);
         bool hit = Physics.Raycast(ray, out RaycastHit hitInfo, float.MaxValue, 1 << LayerMask.NameToLayer("Ground"));
-        if (hit) {
+        if (hit)
+        {
             worldSpaceGrab = hitInfo.point;
             Vector3 delta = worldSpaceGrab - worldSpaceGrabLast;
             Move(-delta);
         }
     }
 
-    public void Release() {
+    public void Release()
+    {
         isGrabbing = false;
     }
 
-    public void Zoom(float delta) {
+    public void Zoom(float delta)
+    {
         orthographicSize += delta * orthographicSize / 5;
-        if(orthographicSize < minCameraSize || orthographicSize > maxCameraSize) {
+        if (orthographicSize < minCameraSize || orthographicSize > maxCameraSize)
+        {
             orthographicSize = Mathf.Clamp(orthographicSize, minCameraSize, maxCameraSize);
             return;
         }
@@ -125,13 +155,15 @@ public class CameraController : Singleton<CameraController> {
         return;
     }
 
-    public void SetVignetteEnabled(bool enabled) {
+    public void SetVignetteEnabled(bool enabled)
+    {
         PostProcessProfile profile = postProcessVolume.profile;
         profile.TryGetSettings(out Vignette vignette);
         vignette.enabled.value = enabled;
     }
 
-    public void SetBlurEnabled(bool enabled) {
+    public void SetBlurEnabled(bool enabled)
+    {
         PostProcessProfile profile = postProcessVolume.profile;
         profile.TryGetSettings(out DepthOfField dof);
         dof.enabled.value = enabled;
